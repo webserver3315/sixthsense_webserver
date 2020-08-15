@@ -1,9 +1,16 @@
+import os
+import sys
+sys.path.insert(0, os.getcwd()+'/yolov5')
+from detect_photo_version2 import get_detected_image_from_photo
 from flask import Flask, flash, request, redirect, url_for
 from werkzeug.utils import secure_filename
 
+UPLOAD_FOLDER = './uploads'
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -27,4 +34,6 @@ def upload_file():
         return redirect('/')
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        return file.stream.read()
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        
+        return str(get_detected_image_from_photo(os.path.join(app.config['UPLOAD_FOLDER'], filename, 'yolov5s.pt', get_detected_image_from_photo(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'yolov5s.pt')))

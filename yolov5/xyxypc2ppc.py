@@ -31,17 +31,15 @@ from models.experimental import *
 from utils.datasets import *
 from utils.utils import *
 
-# def xyxypc2polygon(xyxy: list, conf, cls, cnt):
-def xyxypc2polygon(xyxy: list):
+# def xyxypc_to_polygon(xyxy: list, conf, cls, cnt):
+def xyxy_to_polygon(xyxy: list):
+#     print(f"xyxy is {xyxy}")
     x1=int(xyxy[0].item())
     y1=int(xyxy[1].item())
     x2=int(xyxy[2].item())
     y2=int(xyxy[3].item())
-#     label = '%s %.2f' % (names[int(cls)] + str(cnt), conf)
-#     return [Polygon([(x1, y1), (x2, y1), (x2, y2), (x1, y2)]), conf, int(cls)]
     return Polygon([(x1, y1), (x2, y1), (x2, y2), (x1, y2)])
 
-def ppc2xyxypc(ppc):
-    xy_coordinate = list(zip(*ppc[0].exterior.coords.xy))
-    print(xy_coordinate)
+def polygon_to_xyxy(ppc):
+    xy_coordinate = list(zip(*ppc.exterior.coords.xy))
     return xy_coordinate

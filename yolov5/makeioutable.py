@@ -38,6 +38,7 @@ def get_intersection_over_union(p1: Polygon, p2: Polygon):
     return intersection.area / union.area
 
 
+'''
 def makeioutable(before_ppc: list, now_ppc: list):
     res = []
     for b in before_ppc[0]:
@@ -45,4 +46,17 @@ def makeioutable(before_ppc: list, now_ppc: list):
         for o in now_ppc[0]:
             tmp_res.append(get_intersection_over_union(b, o))
         res.append(tmp_res)
+    return res
+'''
+
+# tracking_object_list = 폴리곤으로만 구성된 리스트
+# detected_object_list = 폴리곤으로만 구성된 리스트
+def make_iou_table(tracking_object_list, detected_object_list):
+    res = []
+    for i, tracking_object in enumerate(tracking_object_list):
+        iou_line = []
+        for j, detected_object in enumerate(detected_object_list):
+            current_iou = get_intersection_over_union(tracking_object, detected_object)
+            iou_line.append(current_iou)
+        res.append(iou_line)
     return res

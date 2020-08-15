@@ -5,6 +5,7 @@ from models.experimental import *
 from utils.datasets import *
 from utils.utils import *
 
+
 def detect(save_img=False):
     print("Detect function Start!")
     out, source, weights, view_img, save_txt, imgsz = \
@@ -69,11 +70,34 @@ def detect(save_img=False):
             pred = apply_classifier(pred, modelc, img, im0s)
 
         # Process detections
+        """
+        Tracking Object = [현좌표, 1전좌표, 2전좌표, 3전좌표, 4전좌표], 확신도, 클래스id]
+        Tracking Object List = [
+            [[1전폴리곤, 2전폴리곤, 3전폴리곤, 4전폴리곤], 확신도, 클래스id],
+            [[1전폴리곤, 2전폴리곤, 3전폴리곤, 4전폴리곤], 확신도, 클래스id],
+            [[1전폴리곤, 2전폴리곤, 3전폴리곤, 4전폴리곤], 확신도, 클래스id],
+            ...
+            [[현폴리곤, 1전폴리곤, 2전폴리곤, 3전폴리곤, 4전폴리곤], 확신도, 클래스id]
+        ]
+        Detected Object List = [
+            [폴리곤, 확신도, 클래스id],
+            [폴리곤, 확신도, 클래스id],
+            [폴리곤, 확신도, 클래스id],
+            ...
+            [폴리곤, 확신도, 클래스id],
+        ]
+        >>> Tracking Object List 랑 Detected Object List 의 IoU Table 작성
+        """
+        tracking_object_list = []
         for i, det in enumerate(pred):  # detections per image
             if webcam:  # batch_size >= 1
                 p, s, im0 = path[i], '%g: ' % i, im0s[i].copy()
             else:
                 p, s, im0 = path, '', im0s
+
+            # 첫 프레임이면, 모든 DO를 신규 TO로써 TOL에 삽입해야한다.
+            if i == 0:
+                # 구현할 것
 
             save_path = str(Path(out) / Path(p).name)
             txt_path = str(Path(out) / Path(p).stem) + ('_%g' % dataset.frame if dataset.mode == 'video' else '')
@@ -81,28 +105,30 @@ def detect(save_img=False):
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             if det is not None and len(det):
                 # Rescale boxes from img_size to im0 size
-                print("before det is: ")
-                print(det)
-                det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
+                # print("before det is: ")
+                # print(det)
 
+                # 이미지에 맞게 xyxy 좌표를 scaling 하는 듯.
+                det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
+                # print("scaled det is : ", det)
                 # Print results
                 for c in det[:, -1].unique():
                     n = (det[:, -1] == c).sum()  # detections per class
                     s += '%g %ss, ' % (n, names[int(c)])  # add to string
 
                 # Write results
-                # print("after det is : ", det)
+
                 cnt = 0
                 for *xyxy, conf, cls in det:
-                    # ppc = xyxypc2ppc(xyxy, conf, cls, cnt)
+                    current_polygon = xyxy_to_polygon(xyxy)
 
-                    # 나중에 살려놓을 것
-                    # current_polygon = xyxypc2polygon(xyxy)
-                    #
+                    print(f"This Frame's Polygon = {current_polygon}")
+                    print(f"This Frame's Confidence and ClassID = {conf}, {cls}")
                     # print(f"{cnt}th PPC[0] is {ppc[0]}")
                     # print(f"{cnt}th PPC[1],[2] is {ppc[1]} {ppc[2]}")
-                    # xyxyxyxy = ppc2xyxypc(ppc)
-                    # print(xyxyxyxy)
+                    re_xyxy = polygon_to_xyxy(polygon)
+                    print(f"re_xyxy is: {re_xyxy}")
+                    print('\n')
 
                     if save_txt:  # Write to file
                         xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh

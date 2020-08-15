@@ -16,6 +16,40 @@ Input: 사진경로 및 유지중인 tracking_object_list
 Output: 사진 내부에서 검출된 모든 Object 에 대한 정보 -> tracking_object_list
 '''
 
+'''
+do_detected_video(cv_net_yolo, '../../data/video/John_Wick_small.mp4', '../../data/output/John_Wick_small_yolo01.avi',
+                    conf_threshold, nms_threshold, True)
+'''
+
+def do_detected_video(cv_net, input_path, output_path, conf_threshold, nms_threshold, is_print):
+    cap = cv2.VideoCapture(input_path)
+
+    codec = cv2.VideoWriter_fourcc(*'XVID')
+
+    vid_size = (round(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), round(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+    vid_fps = cap.get(cv2.CAP_PROP_FPS)
+
+    vid_writer = cv2.VideoWriter(output_path, codec, vid_fps, vid_size)
+
+    frame_cnt = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    print('총 Frame 갯수:', frame_cnt)
+
+    green_color = (0, 255, 0)
+    red_color = (0, 0, 255)
+    while True:
+        hasFrame, img_frame = cap.read()
+        if not hasFrame:
+            print('더 이상 처리할 frame이 없습니다.')
+            break
+
+        returned_frame = get_detected_img(cv_net, img_frame, conf_threshold=conf_threshold, nms_threshold=nms_threshold, \
+                                          use_copied_array=False, is_print=is_print)
+        vid_writer.write(returned_frame)
+    # end of while loop
+
+    vid_writer.release()
+    cap.release()
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', nargs='+', type=str, default='yolov5s.pt', help='model.pt path(s)')
@@ -41,7 +75,7 @@ if __name__ == '__main__':
                 get_detected_image_from_photo()
                 strip_optimizer(opt.weights)
         else:
-            source, weights, conf = opt.source, opt.weights, opt.conf
+            source, weights = opt.source, opt.weights
             tracking_object_list = []
             tracking_object_list = get_detected_image_from_photo(source, weights, tracking_object_list)
             print(f"length of tracking_object_list is {len(tracking_object_list)}")

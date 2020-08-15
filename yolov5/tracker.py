@@ -21,7 +21,7 @@ import heapq
 # import collections
 
 
-# vct = collections.deque(collections.deque(input() for _ in range(0, int(O)) for _ in range(0, int(B))))
+# iou_table = collections.deque(collections.deque(input() for _ in range(0, int(O)) for _ in range(0, int(B))))
 
 def verbose_answer(B, O, hist, done):
     for o in range(O):
@@ -34,9 +34,9 @@ def verbose_answer(B, O, hist, done):
             print(f"이전탐지객체 {b} 는 일치하는 현재탐지객체가 없어서 트래킹 영구중단합니다")
 
 
-def is_all_blue_assigned(B, done, vct):
+def is_all_blue_assigned(B, done, iou_table = []):
     for b in range(B):
-        if not done[b] and not len(vct[b]) == 0:
+        if not done[b] and not len(iou_table[b]) == 0:
             return False
     return True
 
@@ -53,19 +53,19 @@ def print_done(done):
     return
 
 
-def solve(B, O, vct):
+def solve(B, O, iou_table = []):
     # hist = [[-1, -1] for _ in range(O)]
     hist = [[1, -1] for _ in range(O)]
     done = [False for _ in range(B)]
-    while not is_all_blue_assigned(B, done, vct):
+    while not is_all_blue_assigned(B, done, iou_table):
         # print("while not")
         print_hist(hist)
         print_done(done)
         print()
         for b in range(B):
-            if done[b] == True or len(vct[b]) == 0:
+            if done[b] == True or len(iou_table[b]) == 0:
                 continue
-            heap = vct[b]  # C++ reference variable 마냥 alias처럼 써지는거 맞겠지?
+            heap = iou_table[b]  # C++ reference variable 마냥 alias처럼 써지는거 맞겠지?
             front = heapq.heappop(heap)
             heapq.heapify(heap)
             o = front[1]
@@ -86,7 +86,7 @@ def solve(B, O, vct):
 
 
 def initial_input():
-    vct = []
+    iou_table = []
     B, O = list(map(int, input().split()))
     # print("\n")
     # print(f"{B},{O}")
@@ -99,12 +99,12 @@ def initial_input():
         for oo, p in enumerate(i):
             heapq.heappush(heap, (int(-p), int(oo)))
             # print(heap)
-        vct.append(heap)
+        iou_table.append(heap)
 
-    # print(vct)
-    return B, O, vct
+    # print(iou_table)
+    return B, O, iou_table
 
-
-B, O, vct = initial_input()
-hist, done = solve(B, O, vct)
-verbose_answer(B, O, hist, done)
+# 테스트 코드
+# B, O, iou_table = initial_input()
+# hist, done = solve(B, O, iou_table)
+# verbose_answer(B, O, hist, done)

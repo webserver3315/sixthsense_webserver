@@ -32,7 +32,7 @@ from utils.datasets import *
 from utils.utils import *
 
 
-def get_intersection_over_union(p1: Polygon, p2: Polygon):
+def get_intersection_over_union_from_two_polygon(p1: Polygon, p2: Polygon):
     intersection = p1.intersection(p2)
     union = p1.union(p2)
     return intersection.area / union.area
@@ -49,14 +49,34 @@ def makeioutable(before_ppc: list, now_ppc: list):
     return res
 '''
 
-# tracking_object_list = 폴리곤으로만 구성된 리스트
-# detected_object_list = 폴리곤으로만 구성된 리스트
-def make_iou_table(tracking_object_list, detected_object_list):
-    res = []
+"""
+Tracking Object = [현좌표, 1전좌표, 2전좌표, 3전좌표, 4전좌표], 확신도, 클래스id]
+Tracking Object List = [
+    [[1전폴리곤, 2전폴리곤, 3전폴리곤, 4전폴리곤], 확신도, 클래스id],
+    [[1전폴리곤, 2전폴리곤, 3전폴리곤, 4전폴리곤], 확신도, 클래스id],
+    [[1전폴리곤, 2전폴리곤, 3전폴리곤, 4전폴리곤], 확신도, 클래스id],
+    ...
+    [[현폴리곤, 1전폴리곤, 2전폴리곤, 3전폴리곤, 4전폴리곤], 확신도, 클래스id]
+]
+Detected Object List = [
+    [폴리곤, 확신도, 클래스id],
+    [폴리곤, 확신도, 클래스id],
+    [폴리곤, 확신도, 클래스id],
+    ...
+    [폴리곤, 확신도, 클래스id],
+]
+>>> Tracking Object List 랑 Detected Object List 의 IoU Table 작성
+"""
+
+
+def make_iou_table_from_TOL_and_DOL(tracking_object_list, detected_object_list):
+    iou_table = []
     for i, tracking_object in enumerate(tracking_object_list):
         iou_line = []
+        tracking_polygon = tracking_object[0][0]
         for j, detected_object in enumerate(detected_object_list):
-            current_iou = get_intersection_over_union(tracking_object, detected_object)
+            detected_polygon = detected_object[0]
+            current_iou = get_intersection_over_union_from_two_polygon(tracking_polygon, detected_polygon)
             iou_line.append(current_iou)
-        res.append(iou_line)
-    return res
+        iou_table.append(iou_line)
+    return iou_table

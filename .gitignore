@@ -1,3 +1,6 @@
+# ide and editer settings
+.vscode
+
 # venv
 .venv
 

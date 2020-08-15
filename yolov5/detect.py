@@ -1,3 +1,8 @@
+'''
+This Code has been Deprecated.
+Instead, see detect_photo_version.py in same Directory.
+'''
+
 import argparse
 
 from xyxypc2ppc import *
@@ -96,9 +101,11 @@ def detect(save_img=False):
                 p, s, im0 = path, '', im0s
 
             # 첫 프레임이면, 모든 DO를 신규 TO로써 TOL에 삽입해야한다.
+            '''
             if i == 0:
                 # 구현할 것
-
+                
+            '''
             save_path = str(Path(out) / Path(p).name)
             txt_path = str(Path(out) / Path(p).stem) + ('_%g' % dataset.frame if dataset.mode == 'video' else '')
             s += '%gx%g ' % img.shape[2:]  # print string
@@ -110,25 +117,27 @@ def detect(save_img=False):
 
                 # 이미지에 맞게 xyxy 좌표를 scaling 하는 듯.
                 det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
-                # print("scaled det is : ", det)
+                print("scaled det is : ", det)
                 # Print results
                 for c in det[:, -1].unique():
                     n = (det[:, -1] == c).sum()  # detections per class
                     s += '%g %ss, ' % (n, names[int(c)])  # add to string
 
                 # Write results
-
+                detected_object = []
                 cnt = 0
                 for *xyxy, conf, cls in det:
                     current_polygon = xyxy_to_polygon(xyxy)
+                    current_ppc = [current_polygon, conf, cls]
+                    detected_object.append(current_ppc)
 
-                    print(f"This Frame's Polygon = {current_polygon}")
-                    print(f"This Frame's Confidence and ClassID = {conf}, {cls}")
+                    # print(f"This Frame's Polygon = {current_polygon}")
+                    # print(f"This Frame's Confidence and ClassID = {conf}, {cls}")
                     # print(f"{cnt}th PPC[0] is {ppc[0]}")
                     # print(f"{cnt}th PPC[1],[2] is {ppc[1]} {ppc[2]}")
-                    re_xyxy = polygon_to_xyxy(polygon)
-                    print(f"re_xyxy is: {re_xyxy}")
-                    print('\n')
+                    # re_xyxy = polygon_to_xyxy(polygon)
+                    # print(f"re_xyxy is: {re_xyxy}")
+                    # print('\n')
 
                     if save_txt:  # Write to file
                         xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
@@ -144,7 +153,6 @@ def detect(save_img=False):
                         label = '%s %.2f' % (names[int(cls)] + str(cnt), conf)
                         plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
                     cnt = cnt + 1
-
             # Print time (inference + NMS)
             print('%sDone. (%.3fs)' % (s, t2 - t1))
 

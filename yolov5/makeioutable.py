@@ -38,44 +38,30 @@ def get_intersection_over_union_from_two_polygon(p1: Polygon, p2: Polygon):
     return intersection.area / union.area
 
 
-'''
-def makeioutable(before_ppc: list, now_ppc: list):
-    res = []
-    for b in before_ppc[0]:
-        tmp_res = []
-        for o in now_ppc[0]:
-            tmp_res.append(get_intersection_over_union(b, o))
-        res.append(tmp_res)
-    return res
-'''
-
 """
-Tracking Object = [현좌표, 1전좌표, 2전좌표, 3전좌표, 4전좌표], 확신도, 클래스id]
-Tracking Object List = [
-    [[1전폴리곤, 2전폴리곤, 3전폴리곤, 4전폴리곤], 확신도, 클래스id],
-    [[1전폴리곤, 2전폴리곤, 3전폴리곤, 4전폴리곤], 확신도, 클래스id],
-    [[1전폴리곤, 2전폴리곤, 3전폴리곤, 4전폴리곤], 확신도, 클래스id],
-    ...
-    [[현폴리곤, 1전폴리곤, 2전폴리곤, 3전폴리곤, 4전폴리곤], 확신도, 클래스id]
-]
-Detected Object List = [
-    [폴리곤, 확신도, 클래스id],
-    [폴리곤, 확신도, 클래스id],
-    [폴리곤, 확신도, 클래스id],
-    ...
-    [폴리곤, 확신도, 클래스id],
-]
->>> Tracking Object List 랑 Detected Object List 의 IoU Table 작성
+        let ppc = [폴리곤, 확신도, 클래스id]
+
+        Tracking Object = [현ppc, 1전ppc, 2전ppc, 3전ppc, 4전ppc]
+        Tracking Object List = [
+            [현ppc, 1전ppc, 2전ppc, 3전ppc, 4전ppc],
+            [현ppc, 1전ppc, 2전ppc, 3전ppc, 4전ppc],
+            [현ppc, 1전ppc, 2전ppc, 3전ppc, 4전ppc],
+            ...
+            [현ppc, 1전ppc, 2전ppc, 3전ppc, 4전ppc]
+        ]
+        Detected Object List = [
+            ppc, ppc, ppc, ppc, ppc, ..., ppc
+        ]
 """
 
 
 def make_iou_table_from_TOL_and_DOL(tracking_object_list, detected_object_list):
     iou_table = []
-    for i, tracking_object in enumerate(tracking_object_list):
+    for b, tracking_object in enumerate(tracking_object_list):
         iou_line = []
-        tracking_polygon = tracking_object[0][0]
-        for j, detected_object in enumerate(detected_object_list):
-            detected_polygon = detected_object[0]
+        tracking_polygon = tracking_object[b][0][0]
+        for o, detected_object in enumerate(detected_object_list):
+            detected_polygon = detected_object[o][0]
             current_iou = get_intersection_over_union_from_two_polygon(tracking_polygon, detected_polygon)
             iou_line.append(current_iou)
         iou_table.append(iou_line)

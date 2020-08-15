@@ -1,13 +1,22 @@
 import argparse
 
+from detect_photo_version import *
+from tracker import *
+from makeioutable import *
 from xyxypc2ppc import *
 from models.experimental import *
 from utils.datasets import *
 from utils.utils import *
 
+'''
+Input: 사진경로 및 유지중인 tracking_object_list
+실행중: tracking_object_list append 하거나 new 것을 만든다.
+Output: 사진 내부에서 검출된 모든 Object 에 대한 정보 -> tracking_object_list
+'''
 
-def detect(save_img=False):
-    print("Detect function Start!")
+
+def get_detected_image_from_photo(save_img=False, tracking_object_list=[]):
+    print("detect_photo function Start!")
     out, source, weights, view_img, save_txt, imgsz = \
         opt.output, opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size
     webcam = source == '0' or source.startswith('rtsp') or source.startswith('http') or source.endswith('.txt')
@@ -34,13 +43,9 @@ def detect(save_img=False):
 
     # Set Dataloader
     vid_path, vid_writer = None, None
-    if webcam:
-        view_img = True
-        cudnn.benchmark = True  # set True to speed up constant image size inference
-        dataset = LoadStreams(source, img_size=imgsz)
-    else:
-        save_img = True
-        dataset = LoadImages(source, img_size=imgsz)
+    save_img = True
+    dataset = LoadImages(source, img_size=imgsz)
+    print(f"dataset is {dataset}")
 
     # Get names and colors
     names = model.module.names if hasattr(model, 'module') else model.names
@@ -71,32 +76,26 @@ def detect(save_img=False):
 
         # Process detections
         """
-        Tracking Object = [현좌표, 1전좌표, 2전좌표, 3전좌표, 4전좌표], 확신도, 클래스id]
+        let ppc = [폴리곤, 확신도, 클래스id]
+
+        Tracking Object = [현[폴리곤, 확신도, 클래스id], 1전[폴리곤, 확신도, 클래스id], 2전[폴리곤, 확신도, 클래스id], 3전[폴리곤, 확신도, 클래스id], 4전[폴리곤, 확신도, 클래스id]]
         Tracking Object List = [
-            [[1전폴리곤, 2전폴리곤, 3전폴리곤, 4전폴리곤], 확신도, 클래스id],
-            [[1전폴리곤, 2전폴리곤, 3전폴리곤, 4전폴리곤], 확신도, 클래스id],
-            [[1전폴리곤, 2전폴리곤, 3전폴리곤, 4전폴리곤], 확신도, 클래스id],
+            [현[폴리곤, 확신도, 클래스id], 1전[폴리곤, 확신도, 클래스id], 2전[폴리곤, 확신도, 클래스id], 3전[폴리곤, 확신도, 클래스id], 4전[폴리곤, 확신도, 클래스id]],
+            [현[폴리곤, 확신도, 클래스id], 1전[폴리곤, 확신도, 클래스id], 2전[폴리곤, 확신도, 클래스id], 3전[폴리곤, 확신도, 클래스id], 4전[폴리곤, 확신도, 클래스id]],
+            [현[폴리곤, 확신도, 클래스id], 1전[폴리곤, 확신도, 클래스id], 2전[폴리곤, 확신도, 클래스id], 3전[폴리곤, 확신도, 클래스id], 4전[폴리곤, 확신도, 클래스id]],
             ...
-            [[현폴리곤, 1전폴리곤, 2전폴리곤, 3전폴리곤, 4전폴리곤], 확신도, 클래스id]
+            [현[폴리곤, 확신도, 클래스id], 1전[폴리곤, 확신도, 클래스id], 2전[폴리곤, 확신도, 클래스id], 3전[폴리곤, 확신도, 클래스id], 4전[폴리곤, 확신도, 클래스id]]
         ]
         Detected Object List = [
-            [폴리곤, 확신도, 클래스id],
-            [폴리곤, 확신도, 클래스id],
-            [폴리곤, 확신도, 클래스id],
-            ...
-            [폴리곤, 확신도, 클래스id],
+            [폴리곤, 확신도, 클래스id], [폴리곤, 확신도, 클래스id], [폴리곤, 확신도, 클래스id], [폴리곤, 확신도, 클래스id], [폴리곤, 확신도, 클래스id], ..., [폴리곤, 확신도, 클래스id]
         ]
-        >>> Tracking Object List 랑 Detected Object List 의 IoU Table 작성
         """
-        tracking_object_list = []
-        for i, det in enumerate(pred):  # detections per image
-            if webcam:  # batch_size >= 1
-                p, s, im0 = path[i], '%g: ' % i, im0s[i].copy()
-            else:
-                p, s, im0 = path, '', im0s
 
-            # 첫 프레임이면, 모든 DO를 신규 TO로써 TOL에 삽입해야한다.
+        for i, det in enumerate(pred):  # detections per image
+            p, s, im0 = path, '', im0s
+
             '''
+            # 첫 프레임이면, 모든 DO를 신규 TO로써 TOL에 삽입해야한다.
             if i == 0:
                 # 구현할 것
 
@@ -105,81 +104,61 @@ def detect(save_img=False):
             txt_path = str(Path(out) / Path(p).stem) + ('_%g' % dataset.frame if dataset.mode == 'video' else '')
             s += '%gx%g ' % img.shape[2:]  # print string
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
-            if det is not None and len(det):
-                # Rescale boxes from img_size to im0 size
-                # print("before det is: ")
-                # print(det)
 
+            if det is not None and len(det):
                 # 이미지에 맞게 xyxy 좌표를 scaling 하는 듯.
                 det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
-                # print("scaled det is : ", det)
-                # Print results
+                # print(f"det is {det}")
                 for c in det[:, -1].unique():
                     n = (det[:, -1] == c).sum()  # detections per class
                     s += '%g %ss, ' % (n, names[int(c)])  # add to string
 
                 # Write results
-                detected_object = []
+                detected_object_list = []
                 cnt = 0
                 for *xyxy, conf, cls in det:
                     current_polygon = xyxy_to_polygon(xyxy)
                     current_ppc = [current_polygon, conf, cls]
-                    detected_object.append(current_ppc)
+                    detected_object_list.append(current_ppc)
 
-                    # print(f"This Frame's Polygon = {current_polygon}")
-                    # print(f"This Frame's Confidence and ClassID = {conf}, {cls}")
-                    # print(f"{cnt}th PPC[0] is {ppc[0]}")
-                    # print(f"{cnt}th PPC[1],[2] is {ppc[1]} {ppc[2]}")
-                    # re_xyxy = polygon_to_xyxy(polygon)
-                    # print(f"re_xyxy is: {re_xyxy}")
-                    # print('\n')
+                    label = '%s %.2f' % (names[int(cls)] + str(cnt), conf)
+                    plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
 
-                    if save_txt:  # Write to file
-                        xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
-                        # print("if save_txt")
-                        # print(f"xywh is : {xywh}")
-                        with open(txt_path + '.txt', 'a') as f:
-                            f.write(('%g ' * 5 + '\n') % (cls, *xywh))  # label format
-                    if save_img or view_img:  # Add bbox to image
-                        # print(f"type of xyxy is : {type(xyxy)}")
-                        # print(f"if save_img or view_img: {cnt} is at {xyxy}")
-                        # print(f"x1={xyxy[0].item()}, y1={xyxy[1].item()},x2={xyxy[2].item()},y2={xyxy[3].item()}")
-                        # print(f"x1={},y1={},x2={},y2={}")
-                        label = '%s %.2f' % (names[int(cls)] + str(cnt), conf)
-                        plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
                     cnt = cnt + 1
+
+                if not tracking_object_list:
+                    for detected_ppc in detected_object_list:
+                        tracking_object_list.append([detected_ppc])
+                else:
+                    iou_table = make_iou_table_from_TOL_and_DOL(tracking_object_list, detected_object_list)
+                    print(f"iou_table is {iou_table}")
+                    print(f"length of tracking_object_list is {len(tracking_object_list)},"
+                          f"length of detected_object_list is {len(detected_object_list)}")
+                    hist, done = solve(len(tracking_object_list), len(detected_object_list), iou_table)
+                    print(f"hist is {hist},"
+                          f"done is {done}")
+
+                    new_append = []
+                    for o, detected_ppc in enumerate(detected_object_list):
+                        next_append = hist[o][1]
+                        if next_append == -1:
+                            new_append.append([detected_ppc])
+                        else:
+                            if len(tracking_object_list[next_append][0]) >= 5:  # 트래킹 객체의 큐사이즈가 5 초과라면 하나 버리기
+                                tracking_object_list[next_append].pop()
+                            tracking_object_list[next_append].insert(0, detected_ppc)  # 시간복잡 O(n) 이니 차후수정
+                    for b, tracking_object in enumerate(tracking_object_list):
+                        if not done[b]:
+                            print(f"{b}th tracking object's track has been ended")
+                            # del tracking_object_list[b]
+                    for new_tracking_object in new_append:
+                        tracking_object_list.append(new_tracking_object)
+
             # Print time (inference + NMS)
             print('%sDone. (%.3fs)' % (s, t2 - t1))
 
-            # Stream results
-            if view_img:
-                cv2.imshow(p, im0)
-                if cv2.waitKey(1) == ord('q'):  # q to quit
-                    raise StopIteration
-
-            # Save results (image with detections)
-            if save_img:
-                if dataset.mode == 'images':
-                    cv2.imwrite(save_path, im0)
-                else:
-                    if vid_path != save_path:  # new video
-                        vid_path = save_path
-                        if isinstance(vid_writer, cv2.VideoWriter):
-                            vid_writer.release()  # release previous video writer
-
-                        fourcc = 'mp4v'  # output video codec
-                        fps = vid_cap.get(cv2.CAP_PROP_FPS)
-                        w = int(vid_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-                        h = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-                        vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*fourcc), fps, (w, h))
-                    vid_writer.write(im0)
-
-    if save_txt or save_img:
-        print('Results saved to %s' % os.getcwd() + os.sep + out)
-        if platform == 'darwin' and not opt.update:  # MacOS
-            os.system('open ' + save_path)
-
     print('Done. (%.3fs)' % (time.time() - t0))
+    return tracking_object_list
 
 
 if __name__ == '__main__':
@@ -202,8 +181,18 @@ if __name__ == '__main__':
 
     with torch.no_grad():
         if opt.update:  # update all models (to fix SourceChangeWarning)
+            print("if opt.update")
             for opt.weights in ['yolov5s.pt', 'yolov5m.pt', 'yolov5l.pt', 'yolov5x.pt']:
-                detect()
+                get_detected_image_from_photo()
                 strip_optimizer(opt.weights)
         else:
-            detect()
+            tracking_object_list = get_detected_image_from_photo()
+            print(f"length of tracking_object_list is {len(tracking_object_list)}")
+            print(tracking_object_list)
+            for b, tracking_object in enumerate(tracking_object_list):
+                # print(tracking_object)
+                tracking_ppc = tracking_object[0]
+                tracking_polygon = tracking_ppc[0]
+                tracking_polygon
+                print(tracking_polygon)
+    # print(f"final tracking_object_list is {tracking_object_list}")

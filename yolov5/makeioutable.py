@@ -26,6 +26,8 @@ video 1/1 (167/187) /data/DLCV/Detection/yolov5/inference/images/street.mp4: det
 이걸, shapely 객체의 ppc 로 바꿔야 한다.
 ppc = [shapely.Polygon, probability, classid]
 '''
+
+import heapq
 from shapely.geometry import Polygon
 from models.experimental import *
 from utils.datasets import *
@@ -59,10 +61,26 @@ def make_iou_table_from_TOL_and_DOL(tracking_object_list, detected_object_list):
     iou_table = []
     for b, tracking_object in enumerate(tracking_object_list):
         iou_line = []
-        tracking_polygon = tracking_object[b][0][0]
+        tracking_polygon = tracking_object[0][0]
         for o, detected_object in enumerate(detected_object_list):
-            detected_polygon = detected_object[o][0]
+            detected_polygon = detected_object[0]
             current_iou = get_intersection_over_union_from_two_polygon(tracking_polygon, detected_polygon)
             iou_line.append(current_iou)
         iou_table.append(iou_line)
     return iou_table
+
+
+def make_iou_table_to_iou_pair_table(iou_table):
+    # print("\n")
+    # print(f"{B},{O}")
+    iou_pair_table = []
+    for iou_table_line in iou_table:
+        # print(o)
+        # print(i)
+        heap = []
+        for o, iou in enumerate(iou_table_line):
+            heapq.heappush(heap, (int(-iou * 100), int(o)))
+        iou_pair_table.append(heap)
+
+    return iou_pair_table
+

@@ -10,6 +10,10 @@ from utils.utils import *
 # Namespace(agnostic_nms=False, augment=False, classes=None, conf_thres=0.4, device='', img_size=640, iou_thres=0.5, output='inference/output', save_txt=False, source='./inference/images/zidane.jpg', update=False, view_img=False, weights=['yolov5s.pt'])
 
 '''
+이 코드는 opt-독립인 코드입니다.
+version2 말고 version 의 코드는 opt-독립이 아니나, 안정된 작동이 보장된 코드입니다.
+version2 또한 8.15 18:24부로 안정작동이 확인되었고 Push했습니다.
+
 Input: 사진경로 및 유지중인 tracking_object_list
 실행중: tracking_object_list append 하거나 new 것을 만든다.
 Output: 사진 내부에서 검출된 모든 Object 에 대한 정보 -> tracking_object_list
@@ -138,6 +142,7 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[]):
                             tracking_object_list.append([detected_ppc])
                     else:
                         iou_table = make_iou_table_from_TOL_and_DOL(tracking_object_list, detected_object_list)
+                        iou_table = make_iou_table_to_iou_pair_table(iou_table)
                         print(f"iou_table is {iou_table}")
                         print(f"length of tracking_object_list is {len(tracking_object_list)},"
                               f"length of detected_object_list is {len(detected_object_list)}")

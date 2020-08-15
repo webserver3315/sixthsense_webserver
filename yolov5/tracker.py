@@ -34,7 +34,7 @@ def verbose_answer(B, O, hist, done):
             print(f"이전탐지객체 {b} 는 일치하는 현재탐지객체가 없어서 트래킹 영구중단합니다")
 
 
-def is_all_blue_assigned(B, done, iou_table = []):
+def is_all_blue_assigned(B, done, iou_table=[]):
     for b in range(B):
         if not done[b] and not len(iou_table[b]) == 0:
             return False
@@ -53,7 +53,7 @@ def print_done(done):
     return
 
 
-def solve(B, O, iou_table = []):
+def solve(B, O, iou_table=[]):
     # hist = [[-1, -1] for _ in range(O)]
     hist = [[1, -1] for _ in range(O)]
     done = [False for _ in range(B)]
@@ -77,15 +77,18 @@ def solve(B, O, iou_table = []):
             # if hist[o][1] < p:
             if hist[o][0] > p:
                 # print(f"오렌지글씨 {o} 번의 임자가 {hist[o][0]} > {p} 이므로, {hist[o][1]} -> {b} 로 NTR")
-                if hist[o][1] != -1: # 씨발 이거찾는데 4시간 걸렸다
+                if hist[o][1] != -1:  # 씨발 이거찾는데 4시간 걸렸다
                     done[hist[o][1]] = False
                 hist[o][1] = b
                 done[hist[o][1]] = True
                 hist[o][0] = p
+    print(f"return: "
+          f"hist is {hist}"
+          f"done is {done}")
     return hist, done
 
 
-def initial_input():
+def initial_input_1():
     iou_table = []
     B, O = list(map(int, input().split()))
     # print("\n")
@@ -104,7 +107,12 @@ def initial_input():
     # print(iou_table)
     return B, O, iou_table
 
-# 테스트 코드
-# B, O, iou_table = initial_input()
-# hist, done = solve(B, O, iou_table)
-# verbose_answer(B, O, hist, done)
+# # 테스트 코드
+# # B, O, iou_table = initial_input()
+# B, O = 4, 4
+# iou_table = [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.1807372175980975, 0.07689830129553214],
+#              [0.0, 0.1807372175980975, 1.0, 0.4151120929471445], [0.0, 0.07689830129553214, 0.4151120929471445, 1.0]]
+# B, O, iou_pair_table = make_iou_table_to_iou_pair_table(B, O, iou_table)
+# print(iou_pair_table)
+# # hist, done = solve(B, O, iou_table)
+# # verbose_answer(B, O, hist, done)

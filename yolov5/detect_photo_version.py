@@ -14,6 +14,7 @@ Output: 사진 내부에서 검출된 모든 Object 에 대한 정보 -> trackin
 '''
 
 
+# def get_detected_image_from_photo(source, weights, tracking_object_list=[]):
 def get_detected_image_from_photo(source, weights, tracking_object_list=[]):
     print("detect_photo function Start!")
     # out, source, weights, view_img, save_txt, imgsz = \
@@ -160,26 +161,3 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[]):
 
     print('Done. (%.3fs)' % (time.time() - t0))
     return tracking_object_list
-
-
-if __name__ == '__main__':
-    with torch.no_grad():
-        if opt.update:  # update all models (to fix SourceChangeWarning)
-            print("if opt.update")
-            for opt.weights in ['yolov5s.pt', 'yolov5m.pt', 'yolov5l.pt', 'yolov5x.pt']:
-                get_detected_image_from_photo()
-                strip_optimizer(opt.weights)
-        else:
-            source = './inference/images/zidane.jpg'
-            weights = 'yolov5l.pt'
-            tracking_object_list = []
-            tracking_object_list = get_detected_image_from_photo(source, weights, tracking_object_list)
-            print(f"length of tracking_object_list is {len(tracking_object_list)}")
-            print(tracking_object_list)
-            for b, tracking_object in enumerate(tracking_object_list):
-                # print(tracking_object)
-                tracking_ppc = tracking_object[0]
-                tracking_polygon = tracking_ppc[0]
-                tracking_polygon
-                print(tracking_polygon)
-    # print(f"final tracking_object_list is {tracking_object_list}")

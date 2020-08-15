@@ -129,7 +129,7 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[]):
                     cnt = 0
                     for *xyxy, conf, cls in det:
                         current_polygon = xyxy_to_polygon(xyxy)
-                        current_ppc = [current_polygon, conf, cls]
+                        current_ppc = [current_polygon, float(conf), int(cls)]
                         detected_object_list.append(current_ppc)
 
                         label = '%s %.2f' % (names[int(cls)] + str(cnt), conf)

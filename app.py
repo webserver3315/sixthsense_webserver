@@ -1,16 +1,17 @@
-import os
-import sys
-sys.path.insert(0, os.getcwd()+'/yolov5')
-from detect_photo_version2 import get_detected_image_from_photo
 from flask import Flask, flash, request, redirect, url_for
 from werkzeug.utils import secure_filename
+from device import Device
+from yolov5.detect_photo_version2 import get_detected_image_from_photo
 
 UPLOAD_FOLDER = './uploads'
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 
 app = Flask(__name__)
+app.secret_key = 'sunshine!123'
+app.debug = True
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+devices = dict()
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -20,8 +21,11 @@ def allowed_file(filename):
 def hello_world():
     return 'Hello, World!'
 
-@app.route('/image', methods=['POST'])
-def upload_file():
+@app.route('/image/<device_id>', methods=['POST'])
+def update_image(device_id):
+    if not device_id:
+        return 400, "no device id"
+
     # check if the post request has the file part
     if 'file' not in request.files:
         flash('No file part')
@@ -33,7 +37,12 @@ def upload_file():
         flash('No selected file')
         return redirect('/')
     if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
+        filename = device_id + request.json['timestamp']
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         
-        return str(get_detected_image_from_photo(os.path.join(app.config['UPLOAD_FOLDER'], filename, 'yolov5s.pt', get_detected_image_from_photo(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'yolov5s.pt')))
+        if device_id not in devices:
+            devices[device_id] = Device(device_id)
+
+
+
+        return str(get_detected_image_from_photo(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'yolov5s.pt', get_detected_image_from_photo(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'yolov5s.pt')))

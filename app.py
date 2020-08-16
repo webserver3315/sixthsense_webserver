@@ -2,13 +2,15 @@ from flask import Flask, flash, request, redirect, url_for
 from werkzeug.utils import secure_filename
 from device import Device
 from yolov5.detect_photo_version2 import get_detected_image_from_photo
+import os
 
-UPLOAD_FOLDER = './uploads'
+
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 
 app = Flask(__name__)
 app.secret_key = 'sunshine!123'
 app.debug = True
+UPLOAD_FOLDER = './uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 devices = dict()
@@ -37,12 +39,14 @@ def update_image(device_id):
         flash('No selected file')
         return redirect('/')
     if file and allowed_file(file.filename):
-        filename = device_id + request.json['timestamp']
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        
+        extension = os.path.splitext(file.filename)[1]
+        print(extension)
+        filename = device_id + '_' + request.form['timestamp'] + extension
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
         
         if device_id not in devices:
             devices[device_id] = Device(device_id)
-
-
-
-        return str(get_detected_image_from_photo(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'yolov5s.pt', get_detected_image_from_photo(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'yolov5s.pt')))
+            obj_list = devices[device_id].new_frame(filepath, request.form['timestamp'])
+            return str(obj_list)

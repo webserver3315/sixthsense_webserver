@@ -40,6 +40,11 @@ def xyxy_to_polygon(xyxy: list):
     y2=int(xyxy[3].item())
     return Polygon([(x1, y1), (x2, y1), (x2, y2), (x1, y2)])
 
-def polygon_to_xyxy(ppc):
-    xy_coordinate = list(zip(*ppc.exterior.coords.xy))
-    return xy_coordinate
+def polygon_to_xyxy(polygon):
+    xy_coordinate = list(zip(*polygon.exterior.coords.xy))
+    x1 = xy_coordinate[0][0] # 좌상단 x
+    y1 = xy_coordinate[0][1] # 좌상단 y
+    x2 = xy_coordinate[2][0] # 우하단 x
+    y2 = xy_coordinate[2][1] # 우하단 y
+    xyxy = [x1, y1, x2, y2]
+    return xyxy

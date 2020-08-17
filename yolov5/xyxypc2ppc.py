@@ -48,3 +48,10 @@ def polygon_to_xyxy(polygon):
     y2 = xy_coordinate[2][1] # 우하단 y
     xyxy = [x1, y1, x2, y2]
     return xyxy
+
+def get_two_center_from_two_polygon(polygon_1, polygon_2): # polygon 이 사각형임을 전제로 한다.
+    xyxy_1 = polygon_to_xyxy(polygon_1)
+    xyxy_2 = polygon_to_xyxy(polygon_2)
+    center_1 = [int((xyxy_1[0]+xyxy_1[2])/2), int((xyxy_1[1]+xyxy_1[3])/2)]
+    center_2 = [int((xyxy_2[0]+xyxy_2[2])/2), int((xyxy_2[1]+xyxy_2[3])/2)]
+    return [center_1, center_2]

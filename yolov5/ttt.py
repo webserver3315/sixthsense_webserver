@@ -30,7 +30,7 @@ def print_tracking_object_list(tracking_object_list):
 import detect_photo_version3
 from xyxypc2ppc import *
 tracking_object_list = []
-tracking_object_list = detect_photo_version3.get_detected_image_from_photo(source = './inference/images/zidane.jpg', weights = 'yolov5s.pt', tracking_object_list = tracking_object_list)
+tracking_object_list = detect_photo_version3.get_detected_image_from_photo(source = './inference/images/Accident_00.mp4', weights = 'yolov5s.pt', tracking_object_list = tracking_object_list)
 print_tracking_object_list(tracking_object_list)
 
 

@@ -1,8 +1,6 @@
 import argparse
-import os
-import sys
-# print(os.path.dirname(os.path.realpath(__file__)))
-sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+
+from danger_zone import *
 from tracker import *
 from makeioutable import *
 from xyxypc2ppc import *
@@ -24,14 +22,15 @@ Output: 사진 내부에서 검출된 모든 Object 에 대한 정보 -> trackin
 
 
 # def get_detected_image_from_photo(source, weights, tracking_object_list=[]):
-def get_detected_image_from_photo(source, weights='yolov5s.pt', tracking_object_list=[]):
+def get_detected_image_from_photo(source, weights, tracking_object_list=[]):
     with torch.no_grad():
         print("detect_photo function Start!")
         # out, source, weights, view_img, save_txt, imgsz = \
         # opt.output, opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size
+
         save_img = False
         out, weights, view_img, save_txt, imgsz = \
-            'inference/output', weights, False, False, int(640)
+            'inference/output', weights, False, False, int(640)  # default: 640
 
         # Initialize
         # print(f"opt device is '{opt.device}'")
@@ -89,31 +88,9 @@ def get_detected_image_from_photo(source, weights='yolov5s.pt', tracking_object_
                 pred = apply_classifier(pred, modelc, img, im0s)
 
             # Process detections
-            """
-            let ppc = [폴리곤, 확신도, 클래스id]
-    
-            Tracking Object = [현[폴리곤, 확신도, 클래스id], 1전[폴리곤, 확신도, 클래스id], 2전[폴리곤, 확신도, 클래스id], 3전[폴리곤, 확신도, 클래스id], 4전[폴리곤, 확신도, 클래스id]]
-            Tracking Object List = [
-                [현[폴리곤, 확신도, 클래스id], 1전[폴리곤, 확신도, 클래스id], 2전[폴리곤, 확신도, 클래스id], 3전[폴리곤, 확신도, 클래스id], 4전[폴리곤, 확신도, 클래스id]],
-                [현[폴리곤, 확신도, 클래스id], 1전[폴리곤, 확신도, 클래스id], 2전[폴리곤, 확신도, 클래스id], 3전[폴리곤, 확신도, 클래스id], 4전[폴리곤, 확신도, 클래스id]],
-                [현[폴리곤, 확신도, 클래스id], 1전[폴리곤, 확신도, 클래스id], 2전[폴리곤, 확신도, 클래스id], 3전[폴리곤, 확신도, 클래스id], 4전[폴리곤, 확신도, 클래스id]],
-                ...
-                [현[폴리곤, 확신도, 클래스id], 1전[폴리곤, 확신도, 클래스id], 2전[폴리곤, 확신도, 클래스id], 3전[폴리곤, 확신도, 클래스id], 4전[폴리곤, 확신도, 클래스id]]
-            ]
-            Detected Object List = [
-                [폴리곤, 확신도, 클래스id], [폴리곤, 확신도, 클래스id], [폴리곤, 확신도, 클래스id], [폴리곤, 확신도, 클래스id], [폴리곤, 확신도, 클래스id], ..., [폴리곤, 확신도, 클래스id]
-            ]
-            """
-
             for i, det in enumerate(pred):  # detections per image
                 p, s, im0 = path, '', im0s
 
-                '''
-                # 첫 프레임이면, 모든 DO를 신규 TO로써 TOL에 삽입해야한다.
-                if i == 0:
-                    # 구현할 것
-    
-                '''
                 save_path = str(Path(out) / Path(p).name)
                 txt_path = str(Path(out) / Path(p).stem) + ('_%g' % dataset.frame if dataset.mode == 'video' else '')
                 s += '%gx%g ' % img.shape[2:]  # print string
@@ -169,11 +146,33 @@ def get_detected_image_from_photo(source, weights='yolov5s.pt', tracking_object_
                         for new_tracking_object in new_append:
                             tracking_object_list.append(new_tracking_object)
 
+                # 저장하는 부분. 크게 신경쓸 것 없음.
+                if save_img:
+                    if dataset.mode == 'images':
+                        cv2.imwrite(save_path, im0)
+                    else:
+                        if vid_path != save_path:  # new video
+                            vid_path = save_path
+                            if isinstance(vid_writer, cv2.VideoWriter):
+                                vid_writer.release()  # release previous video writer
+
+                            fourcc = 'mp4v'  # output video codec
+                            fps = vid_cap.get(cv2.CAP_PROP_FPS)
+                            w = int(vid_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                            h = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                            vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*fourcc), fps, (w, h))
+                        vid_writer.write(im0)
+
                 # Print time (inference + NMS)
-                print('%sDone. (%.3fs)' % (s, t2 - t1))
+            print('%sDone. (%.3fs)' % (s, t2 - t1))
+
+        if save_txt or save_img:
+            print('Results saved to %s' % os.getcwd() + os.sep + out)
+            if platform == 'darwin' and not opt.update:  # MacOS
+                os.system('open ' + save_path)
 
         print('Done. (%.3fs)' % (time.time() - t0))
-        return tracking_object_list
+    return tracking_object_list
 
 
 if __name__ == '__main__':

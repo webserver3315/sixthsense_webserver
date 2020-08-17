@@ -1,5 +1,6 @@
 import argparse
 
+from danger_zone import *
 from tracker import *
 from makeioutable import *
 from xyxypc2ppc import *
@@ -42,6 +43,9 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[]):
         # Load model
         model = attempt_load(weights, map_location=device)  # load FP32 model
         imgsz = check_img_size(imgsz, s=model.stride.max())  # check img_size
+
+        print(f"imgsz is {imgsz}")
+
         if half:
             model.half()  # to FP16
 
@@ -87,6 +91,7 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[]):
                 pred = apply_classifier(pred, modelc, img, im0s)
 
             # Process detections
+            danger_zone_matrix = [[False for c in range(640)] for r in range(320)]
             for i, det in enumerate(pred):  # detections per image
                 p, s, im0 = path, '', im0s
 
@@ -145,7 +150,10 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[]):
                         for new_tracking_object in new_append:
                             tracking_object_list.append(new_tracking_object)
 
-                # 저장
+                    # tracking_object_list_danger_list, danger_zone_matrix = is_tracking_object_list_dangerous()
+
+
+                # 저장하는 부분. 크게 신경쓸 것 없음.
                 if save_img:
                     if dataset.mode == 'images':
                         cv2.imwrite(save_path, im0)

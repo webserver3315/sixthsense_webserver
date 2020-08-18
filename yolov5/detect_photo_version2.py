@@ -1,4 +1,7 @@
 import argparse
+import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 from danger_zone import *
 from tracker import *
@@ -22,7 +25,7 @@ Output: 사진 내부에서 검출된 모든 Object 에 대한 정보 -> trackin
 
 
 # def get_detected_image_from_photo(source, weights, tracking_object_list=[]):
-def get_detected_image_from_photo(source, weights, tracking_object_list=[]):
+def get_detected_image_from_photo(source, weights='yolov5s.pt', tracking_object_list=[]):
     with torch.no_grad():
         print("detect_photo function Start!")
         # out, source, weights, view_img, save_txt, imgsz = \

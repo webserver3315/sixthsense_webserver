@@ -3,7 +3,7 @@ from werkzeug.utils import secure_filename
 from device import Device
 from yolov5.detect_photo_version2 import get_detected_image_from_photo
 import os
-
+import pickle
 
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 
@@ -46,7 +46,11 @@ def update_image(device_id):
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
         
+        obj_list = None
         if device_id not in devices:
             devices[device_id] = Device(device_id)
             obj_list = devices[device_id].new_frame(filepath, request.form['timestamp'])
-            return str(obj_list)
+        else:
+            device = devices[device_id]
+            obj_list = device.new_frame(filepath, request.form['timestamp'])
+        return pickle.dumps(obj_list)

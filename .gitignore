@@ -9,3 +9,7 @@ __pycache__
 
 # pretrained
 *.pt
+
+# image datas
+inference/
+uploads/

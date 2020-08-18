@@ -49,9 +49,32 @@ def polygon_to_xyxy(polygon):
     xyxy = [x1, y1, x2, y2]
     return xyxy
 
-def get_two_center_from_two_polygon(polygon_1, polygon_2): # polygon 이 사각형임을 전제로 한다.
+def get_center_from_polygon(polygon_1): # polygon 이 사각형임을 전제로 한다.
     xyxy_1 = polygon_to_xyxy(polygon_1)
-    xyxy_2 = polygon_to_xyxy(polygon_2)
-    center_1 = [int((xyxy_1[0]+xyxy_1[2])/2), int((xyxy_1[1]+xyxy_1[3])/2)]
-    center_2 = [int((xyxy_2[0]+xyxy_2[2])/2), int((xyxy_2[1]+xyxy_2[3])/2)]
-    return [center_1, center_2]
+    center_1 = (int((xyxy_1[0]+xyxy_1[2])/2), int((xyxy_1[1]+xyxy_1[3])/2))
+    return center_1
+
+# line_coordinate = [[cx1, cy1], [cx2, cy2]]
+def draw_lines_from_tracking_object(tracking_object, img, color=None, line_thickness = None):
+
+#     tl = line_thickness or round(0.002 * (img.shape[0] + img.shape[1]) / 2) + 1  # line/font thickness
+#     color = color or [random.randint(0, 255) for _ in range(3)]
+#     cv2.line(img, (0,0), (1500,800), color, line_thickness)
+#     return
+
+    center_list = []
+    for ppc in tracking_object:
+        if not center_list:
+            current_polygon = ppc[0]
+            center = get_center_from_polygon(current_polygon)
+            center_list.append(center)
+        else:
+            current_polygon = ppc[0]
+            center = get_center_from_polygon(current_polygon)
+
+            tl = line_thickness or round(0.002 * (img.shape[0] + img.shape[1]) / 2) + 1  # line/font thickness
+            color = color or [random.randint(0, 255) for _ in range(3)]
+            cv2.line(img, center_list[-1], center, color, line_thickness)
+
+            center_list.append(center)
+    return

@@ -22,11 +22,7 @@ Output: 사진 내부에서 검출된 모든 Object 에 대한 정보 -> trackin
 
 
 # def get_detected_image_from_photo(source, weights, tracking_object_list=[]):
-def get_detected_image_from_photo(source, weights, tracking_object_list=[], danger_zone_matrix=[]):
-    ORIGINAL_R, ORIGINAL_C = 720, 1280
-    DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C = 180, 320
-    # DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C = 720, 1280
-    TRACKING_OBJECT_MAX_SIZE = 5
+def get_detected_image_from_photo(source, weights, tracking_object_list=[]):
     with torch.no_grad():
         print("detect_photo function Start!")
         # out, source, weights, view_img, save_txt, imgsz = \
@@ -83,6 +79,7 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
 
             # Inference
             t1 = torch_utils.time_synchronized()
+            # print(f"opt.augment")
             pred = model(img, augment=False)[0]
 
             # Apply NMS
@@ -94,6 +91,7 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
                 pred = apply_classifier(pred, modelc, img, im0s)
 
             # Process detections
+            danger_zone_matrix = [[False for c in range(640)] for r in range(320)]
             for i, det in enumerate(pred):  # detections per image
                 p, s, im0 = path, '', im0s
 
@@ -112,10 +110,18 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
 
                     # Write results
                     detected_object_list = []
+                    cnt = 0
                     for *xyxy, conf, cls in det:
                         current_polygon = xyxy_to_polygon(xyxy)
                         current_ppc = [current_polygon, float(conf), int(cls)]
                         detected_object_list.append(current_ppc)
+
+                        label = '%s %.2f' % (names[int(cls)] + str(cnt), conf)
+                        plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
+                        for tracking_object in tracking_object_list:
+                            draw_lines_from_tracking_object(tracking_object, im0, color=colors[int(cls)],
+                                                            line_thickness=2)
+                        cnt = cnt + 1
 
                     if not tracking_object_list:
                         for detected_ppc in detected_object_list:
@@ -123,7 +129,12 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
                     else:
                         iou_table = make_iou_table_from_TOL_and_DOL(tracking_object_list, detected_object_list)
                         iou_table = make_iou_table_to_iou_pair_table(iou_table)
+                        # print(f"iou_table is {iou_table}")
+                        # print(f"length of tracking_object_list is {len(tracking_object_list)},"
+                        #       f"length of detected_object_list is {len(detected_object_list)}")
                         hist, done = solve(len(tracking_object_list), len(detected_object_list), iou_table)
+                        # print(f"hist is {hist},"
+                        #       f"done is {done}")
 
                         new_append = []
                         for o, detected_ppc in enumerate(detected_object_list):
@@ -131,8 +142,7 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
                             if next_append == -1:
                                 new_append.append([detected_ppc])
                             else:
-                                if len(tracking_object_list[
-                                           next_append]) >= TRACKING_OBJECT_MAX_SIZE:  # 트래킹 객체의 큐사이즈가 5 초과라면 하나 버리기
+                                if len(tracking_object_list[next_append]) >= 5:  # 트래킹 객체의 큐사이즈가 5 초과라면 하나 버리기
                                     tracking_object_list[next_append].pop()
                                 tracking_object_list[next_append].insert(0, detected_ppc)  # 시간복잡 O(n) 이니 차후수정
                         for b, tracking_object in enumerate(tracking_object_list):
@@ -142,35 +152,7 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
                         for new_tracking_object in new_append:
                             tracking_object_list.append(new_tracking_object)
 
-                    print(f"tracking_object_list = {tracking_object_list}")
-                    print(f"detected_object_list = {detected_object_list}")
-                    # danger_list 표 구하기 및 danger_zone_matrix 갱신
-                    tracking_object_list_danger_list, danger_zone_matrix = is_tracking_object_list_dangerous(ORIGINAL_R,
-                                                                                                             ORIGINAL_C,
-                                                                                                             DANGER_ZONE_MATRIX_R,
-                                                                                                             DANGER_ZONE_MATRIX_C,
-                                                                                                             tracking_object_list,
-                                                                                                             danger_zone_matrix)
-                    # print(f"tracking_object_list_danger_list = {tracking_object_list_danger_list}")
-                    # print(f"tracking_object_list = {tracking_object_list}")
-                    # BBOX 두르기 및 라벨 달기 및 꼬리선 달기
-                    print(f"t_obj_list is {tracking_object_list}")
-                    cnt = 0
-                    for b, tracking_object in enumerate(tracking_object_list):
-                        # print(f"polygon = {tracking_object[0][0]}")
-                        xyxy = polygon_to_xyxy(tracking_object[0][0])
-                        conf, cls = tracking_object[0][1], tracking_object[0][2]
-                        draw_lines_from_tracking_object(tracking_object, im0, color=colors[int(cls)],
-                                                        line_thickness=2)
-                        if tracking_object_list_danger_list[b]:
-                            label = '%s %.2f' % ("Danger : " + names[int(cls)] + str(cnt), conf)
-                        else:
-                            label = '%s %.2f' % ("Safe : " + names[int(cls)] + str(cnt), conf)
-                        print(f"xyxy is {xyxy}")
-                        plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
-                        cnt = cnt + 1
-                    # Danger_zone 현황을 위험구역 색칠로써 가시화. 위험스택 쌓일수록 하얗게 변함.
-                    im0 = visualize_danger_zone_matrix(im0, ORIGINAL_R, ORIGINAL_C, DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C, danger_zone_matrix)
+                    # tracking_object_list_danger_list, danger_zone_matrix = is_tracking_object_list_dangerous()
 
                 # 저장하는 부분. 크게 신경쓸 것 없음.
                 if save_img:
@@ -238,3 +220,4 @@ if __name__ == '__main__':
                 tracking_polygon
                 print(tracking_polygon)
     # print(f"final tracking_object_list is {tracking_object_list}")
+

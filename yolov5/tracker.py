@@ -59,9 +59,9 @@ def solve(B, O, iou_table=[]):
     done = [False for _ in range(B)]
     while not is_all_blue_assigned(B, done, iou_table):
         # print("while not")
-        print_hist(hist)
-        print_done(done)
-        print()
+        # print_hist(hist)
+        # print_done(done)
+        # print()
         for b in range(B):
             if done[b] == True or len(iou_table[b]) == 0:
                 continue
@@ -82,9 +82,9 @@ def solve(B, O, iou_table=[]):
                 hist[o][1] = b
                 done[hist[o][1]] = True
                 hist[o][0] = p
-    print(f"return: "
-          f"hist is {hist}"
-          f"done is {done}")
+    # print(f"return: "
+    #       f"hist is {hist}"
+    #       f"done is {done}")
     return hist, done
 
 

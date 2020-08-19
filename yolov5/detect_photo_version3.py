@@ -113,6 +113,11 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
                     # Write results
                     detected_object_list = []
                     for *xyxy, conf, cls in det:
+                        # cls 0: Person, 1: bicycle, 2: Car, 3: Motorcycle, 4: Airplane, 5: Bus, 6: Train, 7: Truck
+                        if int(cls) > 7:
+                            continue
+                        if cls > 2: # 버스, 트럭 등은 전부 Car 로 통일
+                            cls = 2
                         current_polygon = xyxy_to_polygon(xyxy)
                         current_ppc = [current_polygon, float(conf), int(cls)]
                         detected_object_list.append(current_ppc)
@@ -142,9 +147,10 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
                         for new_tracking_object in new_append:
                             tracking_object_list.append(new_tracking_object)
 
-                    print(f"tracking_object_list = {tracking_object_list}")
-                    print(f"detected_object_list = {detected_object_list}")
-                    # danger_list 표 구하기 및 danger_zone_matrix 갱신
+                    # danger_list 표 구하기 및  갱신
+                    # print(danger_zone_matrix[0][0])
+                    # danger_zone_matrix[0][0]-=100
+                    # print(danger_zone_matrix[0][0])
                     tracking_object_list_danger_list, danger_zone_matrix = is_tracking_object_list_dangerous(ORIGINAL_R,
                                                                                                              ORIGINAL_C,
                                                                                                              DANGER_ZONE_MATRIX_R,
@@ -154,23 +160,40 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
                     # print(f"tracking_object_list_danger_list = {tracking_object_list_danger_list}")
                     # print(f"tracking_object_list = {tracking_object_list}")
                     # BBOX 두르기 및 라벨 달기 및 꼬리선 달기
-                    print(f"t_obj_list is {tracking_object_list}")
+                    # print(f"t_obj_list is {tracking_object_list}")
                     cnt = 0
                     for b, tracking_object in enumerate(tracking_object_list):
                         # print(f"polygon = {tracking_object[0][0]}")
                         xyxy = polygon_to_xyxy(tracking_object[0][0])
                         conf, cls = tracking_object[0][1], tracking_object[0][2]
-                        draw_lines_from_tracking_object(tracking_object, im0, color=colors[int(cls)],
-                                                        line_thickness=2)
-                        if tracking_object_list_danger_list[b]:
-                            label = '%s %.2f' % ("Danger : " + names[int(cls)] + str(cnt), conf)
+
+                        if len(tracking_object) > 1:
+                            now_polygon, before_polygon = tracking_object[0][0], tracking_object[1][0]
+                            now_xyxy, before_xyxy = polygon_to_xyxy(now_polygon), polygon_to_xyxy(before_polygon)
+                            now_center, before_center = [now_xyxy[0] + now_xyxy[2], now_xyxy[1] + now_xyxy[3]], [
+                                before_xyxy[0] + before_xyxy[2], before_xyxy[1] + before_xyxy[3]]
+                            speed = abs(now_center[0] - before_center[0]) + abs(now_center[1] - before_center[1])
                         else:
-                            label = '%s %.2f' % ("Safe : " + names[int(cls)] + str(cnt), conf)
-                        print(f"xyxy is {xyxy}")
-                        plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
-                        cnt = cnt + 1
+                            speed = 0
+
+                        if tracking_object_list_danger_list[b]:
+                            label = f"Danger: {names[int(cls)] + str(cnt)} {speed}km/h {int(conf * 100)}%"
+                        else:
+                            label = f"Safe: {names[int(cls)] + str(cnt)} {speed}km/h {int(conf * 100)}%"
+
+                        # print(f"xyxy is {xyxy}")
+                        if speed == 0:
+                            # color_idx = 0  # 하얘질까?
+                            color_idx = int(cls)
+                        else:
+                            color_idx = int(cls)
+                        draw_lines_from_tracking_object(tracking_object, im0, color=colors[color_idx], line_thickness=2)
+                        draw_box_from_tracking_object(tracking_object, im0, label=label, color=colors[color_idx],
+                                                      line_thickness=3)
+                        cnt += 1
                     # Danger_zone 현황을 위험구역 색칠로써 가시화. 위험스택 쌓일수록 하얗게 변함.
-                    im0 = visualize_danger_zone_matrix(im0, ORIGINAL_R, ORIGINAL_C, DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C, danger_zone_matrix)
+                    im0 = visualize_danger_zone_matrix(im0, ORIGINAL_R, ORIGINAL_C, DANGER_ZONE_MATRIX_R,
+                                                       DANGER_ZONE_MATRIX_C, danger_zone_matrix)
 
                 # 저장하는 부분. 크게 신경쓸 것 없음.
                 if save_img:

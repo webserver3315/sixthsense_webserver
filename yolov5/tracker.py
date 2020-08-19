@@ -54,37 +54,25 @@ def print_done(done):
 
 
 def solve(B, O, iou_table=[]):
-    # hist = [[-1, -1] for _ in range(O)]
     hist = [[1, -1] for _ in range(O)]
     done = [False for _ in range(B)]
     while not is_all_blue_assigned(B, done, iou_table):
-        # print("while not")
-        # print_hist(hist)
-        # print_done(done)
-        # print()
         for b in range(B):
             if done[b] == True or len(iou_table[b]) == 0:
                 continue
-            heap = iou_table[b]  # C++ reference variable 마냥 alias처럼 써지는거 맞겠지?
+            heap = iou_table[b]
             front = heapq.heappop(heap)
             heapq.heapify(heap)
             o = front[1]
             p = front[0]
-            # print_done(done)
-            # print(f"오렌지 핑크 글씨 {o}, {p} 분석중...")
             if o == -1 or p == 1:
                 continue
-            # if hist[o][1] < p:
             if hist[o][0] > p:
-                # print(f"오렌지글씨 {o} 번의 임자가 {hist[o][0]} > {p} 이므로, {hist[o][1]} -> {b} 로 NTR")
-                if hist[o][1] != -1:  # 씨발 이거찾는데 4시간 걸렸다
+                if hist[o][1] != -1:
                     done[hist[o][1]] = False
                 hist[o][1] = b
                 done[hist[o][1]] = True
                 hist[o][0] = p
-    # print(f"return: "
-    #       f"hist is {hist}"
-    #       f"done is {done}")
     return hist, done
 
 

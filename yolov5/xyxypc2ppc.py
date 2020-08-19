@@ -56,12 +56,6 @@ def get_center_from_polygon(polygon_1): # polygon 이 사각형임을 전제로 
 
 # line_coordinate = [[cx1, cy1], [cx2, cy2]]
 def draw_lines_from_tracking_object(tracking_object, img, color=None, line_thickness = None):
-
-#     tl = line_thickness or round(0.002 * (img.shape[0] + img.shape[1]) / 2) + 1  # line/font thickness
-#     color = color or [random.randint(0, 255) for _ in range(3)]
-#     cv2.line(img, (0,0), (1500,800), color, line_thickness)
-#     return
-
     center_list = []
     for ppc in tracking_object:
         if not center_list:
@@ -78,3 +72,18 @@ def draw_lines_from_tracking_object(tracking_object, img, color=None, line_thick
 
             center_list.append(center)
     return
+
+def draw_box_from_tracking_object(tracking_object, img, color=None, label=None, line_thickness=None):
+    # Plots one bounding box on image img
+    x = polygon_to_xyxy(tracking_object[0][0])
+    tl = line_thickness or round(0.002 * (img.shape[0] + img.shape[1]) / 2) + 1  # line/font thickness
+    color = color or [random.randint(0, 255) for _ in range(3)]
+#     color = color or [0,0,25„5]
+    c1, c2 = (int(x[0]), int(x[1])), (int(x[2]), int(x[3]))
+    cv2.rectangle(img, c1, c2, color, thickness=tl, lineType=cv2.LINE_AA)
+    if label:
+        tf = max(tl - 1, 1)  # font thickness
+        t_size = cv2.getTextSize(label, 0, fontScale=tl / 3, thickness=tf)[0]
+        c2 = c1[0] + t_size[0], c1[1] - t_size[1] - 3
+        cv2.rectangle(img, c1, c2, color, -1, cv2.LINE_AA)  # filled
+        cv2.putText(img, label, (c1[0], c1[1] - 2), 0, tl / 3, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)

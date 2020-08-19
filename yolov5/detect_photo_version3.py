@@ -167,14 +167,7 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
                         xyxy = polygon_to_xyxy(tracking_object[0][0])
                         conf, cls = tracking_object[0][1], tracking_object[0][2]
 
-                        if len(tracking_object) > 1:
-                            now_polygon, before_polygon = tracking_object[0][0], tracking_object[1][0]
-                            now_xyxy, before_xyxy = polygon_to_xyxy(now_polygon), polygon_to_xyxy(before_polygon)
-                            now_center, before_center = [now_xyxy[0] + now_xyxy[2], now_xyxy[1] + now_xyxy[3]], [
-                                before_xyxy[0] + before_xyxy[2], before_xyxy[1] + before_xyxy[3]]
-                            speed = abs(now_center[0] - before_center[0]) + abs(now_center[1] - before_center[1])
-                        else:
-                            speed = 0
+                        speed = get_speed(tracking_object)
 
                         if tracking_object_list_danger_list[b]:
                             label = f"Danger: {names[int(cls)] + str(cnt)} {speed}km/h {int(conf * 100)}%"

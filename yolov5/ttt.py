@@ -34,7 +34,7 @@ from xyxypc2ppc import *
 tracking_object_list = []
 danger_zone_matrix = [[0 for c in range(320)] for r in range(180)]
 # danger_zone_matrix = [[0 for c in range(1280)] for r in range(720)]
-tracking_object_list = detect_photo_version3.get_detected_image_from_photo(source='./inference/images/Accident_00.mp4',
+tracking_object_list = detect_photo_version3.get_detected_image_from_photo(source='./inference/images/Accident3_04.mp4',
                                                                            weights='yolov5s.pt',
                                                                            tracking_object_list=tracking_object_list,
                                                                            danger_zone_matrix=danger_zone_matrix)

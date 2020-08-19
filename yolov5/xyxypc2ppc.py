@@ -87,3 +87,14 @@ def draw_box_from_tracking_object(tracking_object, img, color=None, label=None, 
         c2 = c1[0] + t_size[0], c1[1] - t_size[1] - 3
         cv2.rectangle(img, c1, c2, color, -1, cv2.LINE_AA)  # filled
         cv2.putText(img, label, (c1[0], c1[1] - 2), 0, tl / 3, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
+
+def get_speed(tracking_object):
+    if len(tracking_object) > 1:
+        now_polygon, before_polygon = tracking_object[0][0], tracking_object[1][0]
+        now_xyxy, before_xyxy = polygon_to_xyxy(now_polygon), polygon_to_xyxy(before_polygon)
+        now_center, before_center = [now_xyxy[0] + now_xyxy[2], now_xyxy[1] + now_xyxy[3]], [
+            before_xyxy[0] + before_xyxy[2], before_xyxy[1] + before_xyxy[3]]
+        speed = abs(now_center[0] - before_center[0]) + abs(now_center[1] - before_center[1])
+    else:
+        speed = 0
+    return speed

@@ -1,0 +1,1 @@
+UPLOAD_FOLDER = '/usr/src/app/uploads'

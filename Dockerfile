@@ -4,7 +4,8 @@ WORKDIR /usr/src/app
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
-RUN sudo apt-get update
+RUN apt-get update
+RUN apt-get install -y sudo
 RUN sudo apt-get install -y libgl1-mesa-dev
 COPY . .
 

@@ -23,6 +23,15 @@ def allowed_file(filename):
 def hello_world():
     return 'Hello, World!'
 
+@app.route('/clear/<device_id>', methods=['GET'])
+def clear_device(device_id):
+    if not device_id:
+        return 400, "no device id"
+    if device_id not in devices:
+        return 400, "no device to delete" 
+    return devices.pop(device_id)
+
+
 @app.route('/image/<device_id>', methods=['POST'])
 def update_image(device_id):
     if not device_id:

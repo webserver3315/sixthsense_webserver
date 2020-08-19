@@ -13,3 +13,6 @@ __pycache__
 # image datas
 inference/
 uploads/
+
+# config file
+config.py

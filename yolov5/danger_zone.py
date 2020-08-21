@@ -59,51 +59,45 @@ def degrade_danger_zone_matrix(DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C, dange
     return danger_zone_matrix
 
 
-def is_parking(tracking_object):
-    if len(tracking_object) == 1:
-        return False
-    else:
-        d
-
-
 # 1. TOL 과 DZM 을 비교대조하여, 위험한 TO 여부를 반환한다.
 # 2. TOL 에서 Class id 가 2 인 객체가 훑고 지나간 영역의 DZM 을 가산한다. 아니면 감산한다.
 # 3. DZM 은 r(세로)*c(가로) 의 2차원 int 행렬이다. r, c에 일단 기본값으로 360, 640 권장
 def is_tracking_object_list_dangerous(ORIGINAL_R, ORIGINAL_C, DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C,
                                       tracking_object_list, danger_zone_matrix):
-    DANGER_UPDATE_STRIDE = 1500  # 훑고지나갈때마다 상승하는 위험도
-    DANGER_THRESHOLD = 1000  # 위험역치
+    DANGER_UPDATE_STRIDE = 3000  # 훑고지나갈때마다 상승하는 위험도
+    DANGER_THRESHOLD = 500  # 위험역치
     DANGER_SCORE_MAX = 5000  # 최대 저장할 수 있는 위험점수
-    DANGER_DEGRADE_STRIDE = 1  # 한 프레임마다 경감되는 위험도
-    SPEED_THRESHOLD = 1
+    DANGER_DEGRADE_STRIDE = 5  # 한 프레임마다 경감되는 위험도
+    SPEED_THRESHOLD = 5
 
+    degrade_danger_zone_matrix(DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C, danger_zone_matrix,
+                               DANGER_DEGRADE_STRIDE)
     tracking_object_list_danger_list = []  # bool형 1차원 배열. 각 tracking object 의 위험구역위치여부를 의미.
     for b, tracking_object in enumerate(tracking_object_list):
-        degrade_danger_zone_matrix(DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C, danger_zone_matrix,
-                                   DANGER_DEGRADE_STRIDE)
-        if tracking_object[0][2] == 0 or get_speed(tracking_object) <= SPEED_THRESHOLD:  # class id가 0, 즉 사람이면 스킵
-            tracking_object_list_danger_list.append(False)
-            continue
+        # 축소좌표 따기
         current_polygon = tracking_object[0][0]
         original_xyxy = polygon_to_xyxy(current_polygon)
         scaled_xyxy = scale_xyxy_from_left_to_right(ORIGINAL_R, ORIGINAL_C, DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C,
                                                     original_xyxy)
         danger_score_of_current_tracking_object = 0
-
-        for r in range(scaled_xyxy[1], scaled_xyxy[3]):
-            for c in range(scaled_xyxy[0], scaled_xyxy[2]):
-                danger_score_of_current_tracking_object += danger_zone_matrix[r][c]
-                danger_zone_matrix[r][c] += DANGER_UPDATE_STRIDE
-                if danger_zone_matrix[r][c] > DANGER_SCORE_MAX:
-                    danger_zone_matrix[r][c] = DANGER_SCORE_MAX
+        if tracking_object[0][2] == 0: # 사람이면, 위험점수만 판별
+            for r in range(scaled_xyxy[1], scaled_xyxy[3]):
+                for c in range(scaled_xyxy[0], scaled_xyxy[2]):
+                    danger_score_of_current_tracking_object += danger_zone_matrix[r][c]
+        elif get_speed(tracking_object) > SPEED_THRESHOLD: # 속도붙은 자동차라면, 따로 위험점수는 안찍는다. 행렬만 가산할 뿐
+            for r in range(scaled_xyxy[1], scaled_xyxy[3]):
+                for c in range(scaled_xyxy[0], scaled_xyxy[2]):
+                    danger_zone_matrix[r][c] += DANGER_UPDATE_STRIDE
+                    if danger_zone_matrix[r][c] > DANGER_SCORE_MAX:
+                        danger_zone_matrix[r][c] = DANGER_SCORE_MAX
         w, h = scaled_xyxy[2] - scaled_xyxy[0], scaled_xyxy[3] - scaled_xyxy[1]
         if w == 0 or h == 0:
-            tracking_object_list_danger_list.append(False)
+            tracking_object_list_danger_list.append(0)
             continue
         average_danger_score = danger_score_of_current_tracking_object / (w * h)
         if average_danger_score >= DANGER_THRESHOLD:
-            tracking_object_list_danger_list.append(True)
+            tracking_object_list_danger_list.append(int(average_danger_score))
         else:
-            tracking_object_list_danger_list.append(False)
+            tracking_object_list_danger_list.append(0)
 
     return tracking_object_list_danger_list, danger_zone_matrix

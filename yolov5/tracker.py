@@ -54,6 +54,7 @@ def print_done(done):
 
 
 def solve(B, O, iou_table=[]):
+    IOU_THRESHOLD = -50
     hist = [[1, -1] for _ in range(O)]
     done = [False for _ in range(B)]
     while not is_all_blue_assigned(B, done, iou_table):
@@ -65,7 +66,7 @@ def solve(B, O, iou_table=[]):
             heapq.heapify(heap)
             o = front[1]
             p = front[0]
-            if o == -1 or p == 1:
+            if o == -1 or p > IOU_THRESHOLD:  # python 의 heap 은 최소힙만 지원되므로 반전
                 continue
             if hist[o][0] > p:
                 if hist[o][1] != -1:

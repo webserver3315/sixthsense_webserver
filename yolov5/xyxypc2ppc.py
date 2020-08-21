@@ -67,7 +67,7 @@ def draw_lines_from_tracking_object(tracking_object, img, color=None, line_thick
             center = get_center_from_polygon(current_polygon)
 
             tl = line_thickness or round(0.002 * (img.shape[0] + img.shape[1]) / 2) + 1  # line/font thickness
-            color = color or [random.randint(0, 255) for _ in range(3)]
+            color = color
             cv2.line(img, center_list[-1], center, color, line_thickness)
 
             center_list.append(center)
@@ -77,8 +77,7 @@ def draw_box_from_tracking_object(tracking_object, img, color=None, label=None, 
     # Plots one bounding box on image img
     x = polygon_to_xyxy(tracking_object[0][0])
     tl = line_thickness or round(0.002 * (img.shape[0] + img.shape[1]) / 2) + 1  # line/font thickness
-    color = color or [random.randint(0, 255) for _ in range(3)]
-#     color = color or [0,0,25„5]
+    color = color
     c1, c2 = (int(x[0]), int(x[1])), (int(x[2]), int(x[3]))
     cv2.rectangle(img, c1, c2, color, thickness=tl, lineType=cv2.LINE_AA)
     if label:

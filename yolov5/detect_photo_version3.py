@@ -1,5 +1,8 @@
-import argparse
+import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
+import argparse
 from danger_zone import *
 from tracker import *
 from makeioutable import *

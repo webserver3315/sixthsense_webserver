@@ -1,7 +1,8 @@
-FROM python:3
+FROM cuda:10.1-cudnn7-devel-ubuntu18.04
 
 WORKDIR /usr/src/app
 
+RUN apt-get install -y python-pip python-dev build-essential
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 RUN apt-get update

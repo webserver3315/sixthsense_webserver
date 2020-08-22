@@ -210,8 +210,8 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
                 os.system('open ' + save_path)
 
         print('Finally, Done. (%.3fs)' % (time.time() - t0))
-    print_tracking_object_list_length(tracking_object_list)
-    return tracking_object_list
+    # print_tracking_object_list_length(tracking_object_list)
+    return tracking_object_lists
 
 
 if __name__ == '__main__':
@@ -232,6 +232,7 @@ if __name__ == '__main__':
     opt = parser.parse_args()
     print(opt)
 
+    danger_zone_matrix = [[0 for c in range(320)] for r in range(180)]
     with torch.no_grad():
         if opt.update:  # update all models (to fix SourceChangeWarning)
             print("if opt.update")
@@ -241,7 +242,7 @@ if __name__ == '__main__':
         else:
             source, weights = opt.source, opt.weights
             tracking_object_list = []
-            tracking_object_list = get_detected_image_from_photo(source, weights, tracking_object_list)
+            tracking_object_list = get_detected_image_from_photo(source, weights, tracking_object_list, danger_zone_matrix)
             print(f"length of tracking_object_list is {len(tracking_object_list)}")
             print(tracking_object_list)
             for b, tracking_object in enumerate(tracking_object_list):

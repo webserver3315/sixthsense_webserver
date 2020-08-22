@@ -3,7 +3,7 @@ FROM nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04
 WORKDIR /usr/src/app
 
 RUN apt-get update
-RUN apt-get install -y python-pip python-dev build-essential
+RUN apt-get install -y python3-pip python3-dev build-essential
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 

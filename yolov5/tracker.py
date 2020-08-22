@@ -26,12 +26,15 @@ import heapq
 def verbose_answer(B, O, hist, done):
     for o in range(O):
         if hist[o][1] == -1:
-            print(f"신규탐지객체 {o} 는 일치하는 이전탐지객체가 없어서 신규 트래킹 객체가 됩니다")
+            # print(f"신규탐지객체 {o} 는 일치하는 이전탐지객체가 없어서 신규 트래킹 객체가 됩니다")
+            print(f"New DO {o} does not have matching TO, so it become NEW TO")
         else:
-            print(f"신규탐지객체 {o} 는 이전탐지객체 {hist[o][1]} 에 {-hist[o][0]} 의 확신도로 append 됩니다.")
+            # print(f"신규탐지객체 {o} 는 이전탐지객체 {hist[o][1]} 에 {-hist[o][0]} 의 확신도로 append 됩니다.")
+            print(f"NEW DO {o} APPENDS at {hist[o][1]}th TO with  {-hist[o][0]} IOU value")
     for b in range(B):
         if done[b] == False:
-            print(f"이전탐지객체 {b} 는 일치하는 현재탐지객체가 없어서 트래킹 영구중단합니다")
+            # print(f"이전탐지객체 {b} 는 일치하는 현재탐지객체가 없어서 트래킹 영구중단합니다")
+            print(f"EXISTING TO {b} STOPPED Tracking as having no child")
 
 
 def is_all_blue_assigned(B, done, iou_table=[]):
@@ -54,7 +57,7 @@ def print_done(done):
 
 
 def solve(B, O, iou_table=[]):
-    IOU_THRESHOLD = -50
+    IOU_THRESHOLD = -40
     hist = [[1, -1] for _ in range(O)]
     done = [False for _ in range(B)]
     while not is_all_blue_assigned(B, done, iou_table):
@@ -74,6 +77,7 @@ def solve(B, O, iou_table=[]):
                 hist[o][1] = b
                 done[hist[o][1]] = True
                 hist[o][0] = p
+    verbose_answer(B, O, hist, done)
     return hist, done
 
 

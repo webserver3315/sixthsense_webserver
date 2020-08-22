@@ -28,8 +28,8 @@ def print_tracking_object_list_length(tracking_object_list):
 
 # def get_detected_image_from_photo(source, weights, tracking_object_list=[]):
 def get_detected_image_from_photo(source, weights, tracking_object_list=[], danger_zone_matrix=[]):
-    ORIGINAL_R, ORIGINAL_C = 720, 1280
-    DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C = 180, 320
+    ORIGINAL_R, ORIGINAL_C = 480, 640
+    DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C = 120, 160
     TRACKING_OBJECT_MAX_SIZE = 10
     with torch.no_grad():
         print("detect_photo function Start!")
@@ -143,7 +143,7 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
                                            next_append]) >= TRACKING_OBJECT_MAX_SIZE:  # 트래킹 객체의 큐사이즈가 5 초과라면 하나 버리기
                                     tracking_object_list[next_append].pop()
                                 tracking_object_list[next_append].insert(0, detected_ppc)  # 시간복잡 O(n) 이니 차후수정
-                        for b, tracking_object in enumerate(tracking_object_list):
+                        for b, tracking_object in reversed(list(enumerate(tracking_object_list))):
                             if not done[b]:
                                 print(f"{b}th tracking object's track has been ended")
                                 del tracking_object_list[b]
@@ -158,7 +158,6 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
                                                                                                              tracking_object_list,
                                                                                                              danger_zone_matrix)
                     # BBOX 두르기 및 라벨 달기 및 꼬리선 달기
-                    cnt = 0
                     for b, tracking_object in enumerate(tracking_object_list):
                         xyxy = polygon_to_xyxy(tracking_object[0][0])
                         conf, cls = tracking_object[0][1], tracking_object[0][2]
@@ -166,9 +165,9 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
                         speed = get_speed(tracking_object)
 
                         if tracking_object_list_danger_list[b] > 0:
-                            label = f"Danger: {names[int(cls)] + str(cnt)} {speed}km/h {int(tracking_object_list_danger_list[b] / 500)}%"
+                            label = f"Danger: {names[int(cls)] + str(b)} {speed}km/h {int(tracking_object_list_danger_list[b] / 500)}%"
                         else:
-                            label = f"{names[int(cls)] + str(cnt)} {speed}km/h"
+                            label = f"{names[int(cls)] + str(b)} {speed}km/h"
 
                         if tracking_object[0][2] != 0:  # 차량은 파랑. 참고로 BGR 순임
                             colors = (255, 0, 0)
@@ -179,7 +178,6 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
                         draw_lines_from_tracking_object(tracking_object, im0, color=colors, line_thickness=2)
                         draw_box_from_tracking_object(tracking_object, im0, label=label, color=colors,
                                                       line_thickness=3)
-                        cnt += 1
                     # Danger_zone 현황을 위험구역 색칠로써 가시화. 위험스택 쌓일수록 하얗게 변함.
                     im0 = visualize_danger_zone_matrix(im0, ORIGINAL_R, ORIGINAL_C, DANGER_ZONE_MATRIX_R,
                                                        DANGER_ZONE_MATRIX_C, danger_zone_matrix)
@@ -242,7 +240,8 @@ if __name__ == '__main__':
         else:
             source, weights = opt.source, opt.weights
             tracking_object_list = []
-            tracking_object_list = get_detected_image_from_photo(source, weights, tracking_object_list, danger_zone_matrix)
+            tracking_object_list = get_detected_image_from_photo(source, weights, tracking_object_list,
+                                                                 danger_zone_matrix)
             print(f"length of tracking_object_list is {len(tracking_object_list)}")
             print(tracking_object_list)
             for b, tracking_object in enumerate(tracking_object_list):

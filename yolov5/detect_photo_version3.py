@@ -214,7 +214,7 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
 
         print('Finally, Done. (%.3fs)' % (time.time() - t0))
     # print_tracking_object_list_length(tracking_object_list)
-    return tracking_object_lists
+    return tracking_object_list
 
 
 if __name__ == '__main__':

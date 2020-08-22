@@ -21,6 +21,11 @@ Output: 사진 내부에서 검출된 모든 Object 에 대한 정보 -> trackin
 '''
 
 
+def print_tracking_object_list_length(tracking_object_list):
+    for b, tracking_object in enumerate(tracking_object_list):
+        print(f"{b}th TOBJ's history length = {len(tracking_object)}")
+
+
 # def get_detected_image_from_photo(source, weights, tracking_object_list=[]):
 def get_detected_image_from_photo(source, weights, tracking_object_list=[], danger_zone_matrix=[]):
     ORIGINAL_R, ORIGINAL_C = 720, 1280
@@ -205,6 +210,7 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
                 os.system('open ' + save_path)
 
         print('Finally, Done. (%.3fs)' % (time.time() - t0))
+    print_tracking_object_list_length(tracking_object_list)
     return tracking_object_list
 
 

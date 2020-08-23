@@ -23,6 +23,7 @@ Input: 사진경로 및 유지중인 tracking_object_list
 Output: 사진 내부에서 검출된 모든 Object 에 대한 정보 -> tracking_object_list
 '''
 
+compileboushiyou
 
 # def get_detected_image_from_photo(source, weights, tracking_object_list=[]):
 def get_detected_image_from_photo(source, weights='yolov5s.pt', tracking_object_list=[]):

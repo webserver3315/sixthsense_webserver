@@ -1,7 +1,6 @@
 from flask import Flask, flash, request, redirect, url_for
 from werkzeug.utils import secure_filename
 from device import Device
-from yolov5.detect_photo_version2 import get_detected_image_from_photo
 from config import UPLOAD_FOLDER
 import os
 import pickle

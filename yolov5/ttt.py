@@ -12,11 +12,12 @@ def print_tracking_object_list(tracking_object_list):
         for p, ppc in enumerate(tracking_object):
             current_polygon = ppc[0]
             current_xyxy = polygon_to_xyxy(current_polygon)
-            if p!=0:
-                print(f"    {p}Zen ppc of {b}th TO: {current_xyxy}, {ppc[2]}")
+            middle_c = (current_xyxy[0] + current_xyxy[2]) / 2
+            middle_r = (current_xyxy[1] + current_xyxy[3]) / 2
+            if p != 0:
+                print(f"    {p}Zen ppc of {b}th TO: {[middle_c, middle_r]}, {ppc[2]}")
             else:
-                print(f"{p}Zen ppc of {b}th TO: {current_xyxy}, {ppc[2]}")
-
+                print(f"{p}Zen ppc of {b}th TO: {[middle_c, middle_r]}, {ppc[2]}")
 
 
 #

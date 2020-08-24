@@ -47,7 +47,7 @@ def speed_check(item):
         (now_pos[0][0]+now_pos[1][0])/2,
         (now_pos[1][1]+now_pos[2][1])/2
     )
-    if (abs(center_point_of_now_pos[0]-center_point_of_oldest_pre_pos[0])+abs(center_point_of_now_pos[1]-center_point_of_oldest_pre_pos[1]))/item_size < 10:
+    if (abs(center_point_of_now_pos[0]-center_point_of_oldest_pre_pos[0])+abs(center_point_of_now_pos[1]-center_point_of_oldest_pre_pos[1]))/item_size < 4:
         return(0, 0)
     return (
         (center_point_of_now_pos[0]-center_point_of_oldest_pre_pos[0])/item_size,
@@ -301,7 +301,7 @@ def accident_simulation(object_car, object_person):
 
     # 9개의 구간별 최대 2차 1변수 식을 미분해서 최댓 값 구하기
     res_max = 0
-    cal_limit = 15 # 사고 확률 계산 유효 범위
+    cal_limit = 60 # 사고 확률 계산 유효 범위
 
     for poly in res_func:
         # 계산 범위에 아예 포함되지 않는 경우 (0 <= t <= car_limit)

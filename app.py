@@ -1,9 +1,10 @@
-from flask import Flask, flash, request, redirect, url_for
+from flask import Flask, flash, request, redirect, url_for, send_from_directory, make_response, render_template
 from werkzeug.utils import secure_filename
 from device import Device
 from config import UPLOAD_FOLDER
 import os
 import pickle
+import cv2
 
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 
@@ -33,7 +34,6 @@ def clear_device(device_id):
 
 @app.route('/image/<device_id>', methods=['POST'])
 def update_image(device_id):
-
     if not device_id:
         return "no device id", 400
     # check if the post request has the file part
@@ -62,3 +62,24 @@ def update_image(device_id):
             device = devices[device_id]
             obj_list = device.new_frame(filepath, request.form['timestamp'])
         return pickle.dumps(obj_list)
+
+@app.route('/framed/<device_id>', methods=['GET'])
+def framed(device_id):
+    retval, buffer = cv2.imencode('.png', devices[device_id].framed_images[-1])
+    response = make_response(buffer.tobytes())
+    response.headers['Content-Type'] = 'image/png'
+    return response
+
+@app.route('/framed/<device_id>/<idx>', methods=['GET'])
+def framed_idx(device_id):
+    pass
+
+@app.route('/dashboard/<device_id>', methods=['GET'])
+def dashboard(device_id):
+    return render_template('dashboard.html', image_url='/framed/'+device_id)
+
+@app.route('/uploads/<path:filename>')
+def serve_static(filename):
+    print(UPLOAD_FOLDER)
+    return send_from_directory(UPLOAD_FOLDER, filename)
+

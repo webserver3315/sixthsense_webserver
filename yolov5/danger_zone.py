@@ -24,6 +24,13 @@ def scale_xyxy_from_left_to_right(R, C, r, c, xyxy):  # C = 가로픽셀수, R =
     return xyxy_late
 
 
+def automatic_danger_zone_matrix(img, danger_zone_matrix):
+    ORIGINAL_R, ORIGINAL_C = original_img.shape[0], original_img.shape[1]
+    DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C = int(ORIGINAL_R / 4), int(ORIGINAL_C / 4)
+    visualize_danger_zone_matrix(img, ORIGINAL_R, ORIGINAL_C, DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C, danger_zone_matrix)
+    return img
+
+
 def visualize_danger_zone_matrix(img, ORIGINAL_R, ORIGINAL_C, DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C,
                                  danger_zone_matrix):
     # default = 720 1280 180 320

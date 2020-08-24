@@ -1,5 +1,6 @@
 import os
 import sys
+
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 import argparse
@@ -31,8 +32,13 @@ def print_tracking_object_list_length(tracking_object_list):
 
 # def get_detected_image_from_photo(source, weights, tracking_object_list=[]):
 def get_detected_image_from_photo(source, weights, tracking_object_list=[], danger_zone_matrix=[]):
-    ORIGINAL_R, ORIGINAL_C = 480, 640
-    DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C = 120, 160
+    # ORIGINAL_R, ORIGINAL_C = 480, 640
+    # DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C = 120, 160
+    print(f"get_detected_image_from_photo start!")
+    original_img = imread(source)
+    ORIGINAL_R, ORIGINAL_C = original_img.shape[0], original_img.shape[1]
+    DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C = int(ORIGINAL_R / 4), int(ORIGINAL_C / 4)
+    print(f"ORIGINAL R, C and DZM R, C is {ORIGINAL_R} {ORIGINAL_C} {DANGER_ZONE_MATRIX_R} {DANGER_ZONE_MATRIX_C}")
     TRACKING_OBJECT_MAX_SIZE = 10
     with torch.no_grad():
         print("detect_photo function Start!")

@@ -34,9 +34,9 @@ def initialize_danger_zone_matrix(original_img):
 def automatic_visualize_danger_zone_matrix(original_img, danger_zone_matrix):
     ORIGINAL_R, ORIGINAL_C = int(original_img.shape[0]), int(original_img.shape[1])
     DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C = int(ORIGINAL_R / 4), int(ORIGINAL_C / 4)
-    visualize_danger_zone_matrix(img, ORIGINAL_R, ORIGINAL_C, DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C,
+    visualize_danger_zone_matrix(original_img, ORIGINAL_R, ORIGINAL_C, DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C,
                                  danger_zone_matrix)
-    return img
+    return original_img
 
 
 def visualize_danger_zone_matrix(img, ORIGINAL_R, ORIGINAL_C, DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C,

@@ -20,10 +20,18 @@ def scale_xyxy_from_left_to_right(R, C, r, c, xyxy):  # C = 가로픽셀수, R =
     return xyxy_late
 
 
-def automatic_danger_zone_matrix(img, danger_zone_matrix):
-    ORIGINAL_R, ORIGINAL_C = original_img.shape[0], original_img.shape[1]
+def initialize_danger_zone_matrix(original_img):
+    ORIGINAL_R, ORIGINAL_C = int(original_img.shape[0]), int(original_img.shape[1])
     DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C = int(ORIGINAL_R / 4), int(ORIGINAL_C / 4)
-    visualize_danger_zone_matrix(img, ORIGINAL_R, ORIGINAL_C, DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C, danger_zone_matrix)
+    danger_zone_matrix = [[0 for c in range(DANGER_ZONE_MATRIX_C)] for r in range(DANGER_ZONE_MATRIX_R)]
+    return danger_zone_matrix
+
+
+def automatic_visualize_danger_zone_matrix(original_img, danger_zone_matrix):
+    ORIGINAL_R, ORIGINAL_C = int(original_img.shape[0]), int(original_img.shape[1])
+    DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C = int(ORIGINAL_R / 4), int(ORIGINAL_C / 4)
+    visualize_danger_zone_matrix(img, ORIGINAL_R, ORIGINAL_C, DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C,
+                                 danger_zone_matrix)
     return img
 
 
@@ -87,11 +95,11 @@ def is_tracking_object_list_dangerous(ORIGINAL_R, ORIGINAL_C, DANGER_ZONE_MATRIX
         scaled_xyxy = scale_xyxy_from_left_to_right(ORIGINAL_R, ORIGINAL_C, DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C,
                                                     original_xyxy)
         danger_score_of_current_tracking_object = 0
-        if tracking_object[0][2] == 0: # 사람이면, 위험점수만 판별
+        if tracking_object[0][2] == 0:  # 사람이면, 위험점수만 판별
             for r in range(scaled_xyxy[1], scaled_xyxy[3]):
                 for c in range(scaled_xyxy[0], scaled_xyxy[2]):
                     danger_score_of_current_tracking_object += danger_zone_matrix[r][c]
-        elif get_speed(tracking_object) > SPEED_THRESHOLD: # 속도붙은 자동차라면, 따로 위험점수는 안찍는다. 행렬만 가산할 뿐
+        elif get_speed(tracking_object) > SPEED_THRESHOLD:  # 속도붙은 자동차라면, 따로 위험점수는 안찍는다. 행렬만 가산할 뿐
             for r in range(scaled_xyxy[1], scaled_xyxy[3]):
                 for c in range(scaled_xyxy[0], scaled_xyxy[2]):
                     danger_zone_matrix[r][c] += DANGER_UPDATE_STRIDE

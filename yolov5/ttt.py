@@ -30,8 +30,8 @@ def print_tracking_object_list(tracking_object_list):
 #                                                                                danger_zone_matrix=danger_zone_matrix)
 
 tracking_object_list = []
-danger_zone_matrix = [[0 for c in range(160)] for r in range(120)]
-
+# danger_zone_matrix = [[0 for c in range(160)] for r in range(120)]
+danger_zone_matrix = []
 f = []
 mypath = '/data/swmrepo/sunshine-2/yolov5/inference/eun'
 for (dirpath, dirnames, filenames) in walk(mypath):
@@ -42,6 +42,9 @@ for b, source in enumerate(f):
     source = mypath + '/' + source
     # source2 = mypath + f"/Accident_00_{b:03d}.jpg"
     # os.rename(source, source2)
+    if not danger_zone_matrix:
+        original_img = imread(source)
+        danger_zone_matrix = initialize_danger_zone_matrix(original_img)
     tracking_object_list = get_detected_image_from_photo(source=source, weights='yolov5s.pt',
                                                          tracking_object_list=tracking_object_list,
                                                          danger_zone_matrix=danger_zone_matrix)

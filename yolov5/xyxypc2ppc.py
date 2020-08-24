@@ -26,6 +26,10 @@ video 1/1 (167/187) /data/DLCV/Detection/yolov5/inference/images/street.mp4: det
 이걸, shapely 객체의 ppc 로 바꿔야 한다.
 ppc = [shapely.Polygon, probability, classid]
 '''
+import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+
 from shapely.geometry import Polygon
 from models.experimental import *
 from utils.datasets import *

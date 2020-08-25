@@ -65,10 +65,3 @@ $ python3 ttt.py
 
 [![DOI](https://zenodo.org/badge/264818686.svg)](https://zenodo.org/badge/latestdoi/264818686)
 
-
-## Issue Template
-
-## Liscence
-- **GPL 3.0**
-
-

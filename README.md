@@ -46,13 +46,16 @@ YOLOv5 may be run in any of the following up-to-date verified environments (with
 
 
 ## Inference
-You can easily run code by just running ttt.py.
-Before you run ttt.py, you might have to change ttt.py.
+You can run code by running ttt.py.
+
+But, before you run ttt.py, you might have to change ttt.py.
 
 ```
 sys.stdout = open('/data/swmrepo/sunshine-2/yolov5/inference/output/output.txt', 'w') # change directory at which you want to save log of your result.
 mypath = '/data/swmrepo/sunshine-2/yolov5/inference/images/DATA_DIRECTORY' # change directory at which you want to read from.
 ```
+
+After you change ttt.py, you can easily run code by just running ttt.py.
 
 ```bash
 $ python3 ttt.py

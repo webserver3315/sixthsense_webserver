@@ -4,14 +4,14 @@ This repository represents Sixthsense Project dealing with pedestrian protection
 **All code and models are under active development, and are subject to modification or deletion without notice.** Use at your own risk.
 
 ## Code Explanation
--danger_zone.py
--detect_photo_version3.py
--makeioutable.py
--tracker.py
--ttt.py
--xyxypc2ppc.py
--detect.py
--app.py
+- danger_zone.py
+- detect_photo_version3.py
+- makeioutable.py
+- tracker.py
+- ttt.py
+- xyxypc2ppc.py
+- detect.py
+- app.py
 
 
 ## Requirements

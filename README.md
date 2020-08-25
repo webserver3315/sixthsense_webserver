@@ -1,4 +1,5 @@
 This repository represents Sixthsense Project dealing with pedestrian protection solution using object detection methods, and incorporates several modules we made based on yolov5 model https://github.com/ultralytics/yolov5/blob/master/README.md
+
 **All code and models are under active development, and are subject to modification or deletion without notice.** Use at your own risk.
 
 ## Pretrained Checkpoints

@@ -57,7 +57,7 @@ def visualize_danger_zone_matrix(img, ORIGINAL_R, ORIGINAL_C, DANGER_ZONE_MATRIX
             alpha = danger_zone_matrix[rr][cc] * 0.0002
             sub_img = img[y:y + h, x:x + w]
             white_rect = np.ones(sub_img.shape, dtype=np.uint8) * 255
-            res = cv2.addWeighted(sub_img, 1 - alpha * 0.85, white_rect, alpha * 0.85, 0)
+            res = cv2.addWeighted(sub_img, 1 - alpha * 0.35, white_rect, alpha * 0.35, 0)
             # Putting the image back to its position
             img[y:y + h, x:x + w] = res
     return img

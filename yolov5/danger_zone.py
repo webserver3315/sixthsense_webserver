@@ -1,5 +1,5 @@
+import numpy as np
 from cv2 import *
-from numpy import *
 from xyxypc2ppc import *
 from shapely.geometry import Polygon
 from models.experimental import *
@@ -24,6 +24,7 @@ def initialize_danger_zone_matrix(original_img):
     ORIGINAL_R, ORIGINAL_C = int(original_img.shape[0]), int(original_img.shape[1])
     DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C = int(ORIGINAL_R / 4), int(ORIGINAL_C / 4)
     danger_zone_matrix = [[0 for c in range(DANGER_ZONE_MATRIX_C)] for r in range(DANGER_ZONE_MATRIX_R)]
+    danger_zone_matrix = np.full(DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C, 0, dtype=int)
     return danger_zone_matrix
 
 
@@ -64,13 +65,9 @@ def print_danger_zone_matrix(r, c, danger_zone_matrix):
         print(f"{danger_zone_matrix[rr]}")
 
 
-def degrade_danger_zone_matrix(DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C, danger_zone_matrix, DANGER_DEGRADE_STRIDE):
-    for r, danger_zone_line in enumerate(danger_zone_matrix):
-        for c, d in enumerate(danger_zone_line):
-            # print(f"r, c, d = {r}, {c}, {d}")
-            danger_zone_line[c] = danger_zone_line[c] - DANGER_DEGRADE_STRIDE
-            if danger_zone_line[c] < 0:
-                danger_zone_line[c] = 0
+def degrade_danger_zone_matrix(danger_zone_matrix, DANGER_DEGRADE_STRIDE):
+    # DANGER_DEGRADE_STRIDE 만큼 빼지만, 위험계수가 음수라면 0으로 대체
+    danger_zone_matrix = np.where(danger_zone_matrix - DANGER_DEGRADE_STRIDE > 0, danger_zone_matrix, 0)
     return danger_zone_matrix
 
 
@@ -85,8 +82,7 @@ def is_tracking_object_list_dangerous(ORIGINAL_R, ORIGINAL_C, DANGER_ZONE_MATRIX
     DANGER_DEGRADE_STRIDE = 5  # 한 프레임마다 경감되는 위험도
     SPEED_THRESHOLD = 5
 
-    degrade_danger_zone_matrix(DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C, danger_zone_matrix,
-                               DANGER_DEGRADE_STRIDE)
+    degrade_danger_zone_matrix(danger_zone_matrix, DANGER_DEGRADE_STRIDE)
     tracking_object_list_danger_list = []  # bool형 1차원 배열. 각 tracking object 의 위험구역위치여부를 의미.
     for b, tracking_object in enumerate(tracking_object_list):
         # 축소좌표 따기

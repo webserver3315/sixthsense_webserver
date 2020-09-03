@@ -96,4 +96,4 @@ def get_speed(tracking_object):
         speed = abs(now_center[0] - before_center[0]) + abs(now_center[1] - before_center[1])
     else:
         speed = 0
-    return speed
+    return speed # float

@@ -33,7 +33,7 @@ tracking_object_list = []
 # danger_zone_matrix = [[0 for c in range(160)] for r in range(120)]
 danger_zone_matrix = []
 f = []
-mypath = '/data/swmrepo/sunshine-2/yolov5/inference/eun'
+mypath = '/data/swmrepo/sunshine-2/yolov5/inference/images/GTA_01'
 for (dirpath, dirnames, filenames) in walk(mypath):
     f.extend(filenames)
     break

@@ -67,12 +67,26 @@ def print_danger_zone_matrix(r, c, danger_zone_matrix):
 
 def degrade_danger_zone_matrix(danger_zone_matrix, DANGER_DEGRADE_STRIDE):
     # DANGER_DEGRADE_STRIDE 만큼 빼지만, 위험계수가 음수라면 0으로 대체
-    danger_zone_matrix = danger_zone_matrix - DANGER_DEGRADE_STRIDE
-    for r in range(danger_zone_matrix.shape[0]):
-        for c in range(danger_zone_matrix.shape[1]):
-            if danger_zone_matrix[r][c] < 0:
-                danger_zone_matrix[r][c] = 0
-    # danger_zone_matrix[danger_zone_matrix < 0] = 0
+    # np.set_printoptions(threshold=np.inf)
+
+    # 검증된 1줄 numpy 코드 41.977s
+    danger_zone_matrix[danger_zone_matrix >= DANGER_DEGRADE_STRIDE] -= DANGER_DEGRADE_STRIDE
+
+    # 검증된 3줄 numpy 코드 41.333s
+    # danger_zone_matrix -= DANGER_DEGRADE_STRIDE
+    # less_than_0 = danger_zone_matrix < 0
+    # danger_zone_matrix[less_than_0] = 0
+    # print(f"danger_zone_matrix : {danger_zone_matrix}")
+    # print(f"less_than_0 : {less_than_0}")
+
+    # 검증된 2중 for 문 코드 48.090s
+    # print(f"{danger_zone_matrix.shape[0]} * {danger_zone_matrix.shape[1]}")
+    # for r in range(danger_zone_matrix.shape[0]):
+    #     for c in range(danger_zone_matrix.shape[1]):
+    #         danger_zone_matrix[r][c] -= DANGER_DEGRADE_STRIDE
+    #         if danger_zone_matrix[r][c] < 0:
+    #             danger_zone_matrix[r][c] = 0
+
     return danger_zone_matrix
 
 
@@ -101,12 +115,9 @@ def is_tracking_object_list_dangerous(ORIGINAL_R, ORIGINAL_C, DANGER_ZONE_MATRIX
                 for c in range(scaled_xyxy[0], scaled_xyxy[2]):
                     danger_score_of_current_tracking_object += danger_zone_matrix[r][c]
         elif get_speed(tracking_object) > SPEED_THRESHOLD:  # 속도붙은 자동차라면, 따로 위험점수는 안찍는다. 행렬만 가산할 뿐
-            for r in range(scaled_xyxy[1], scaled_xyxy[3]):
-                for c in range(scaled_xyxy[0], scaled_xyxy[2]):
-                    danger_zone_matrix[r][c] += DANGER_UPDATE_STRIDE
-                    if danger_zone_matrix[r][c] > DANGER_SCORE_MAX:
-                        danger_zone_matrix[r][c] = DANGER_SCORE_MAX
-            # danger_zone_matrix[scaled_xyxy[1]:scaled_xyxy[3]][scaled_xyxy[0]:scaled_xyxy[2]] += DANGER_UPDATE_STRIDE
+            danger_zone_matrix[scaled_xyxy[1]:scaled_xyxy[3], scaled_xyxy[0]:scaled_xyxy[2]] += DANGER_UPDATE_STRIDE
+            danger_zone_matrix[danger_zone_matrix > DANGER_SCORE_MAX] = DANGER_SCORE_MAX
+            # danger_zone_matrix[scaled_xyxy[1]:scaled_xyxy[3]+1][scaled_xyxy[0]:scaled_xyxy[2]+1] += DANGER_UPDATE_STRIDE
             # danger_zone_matrix = np.where(danger_zone_matrix > DANGER_SCORE_MAX, danger_zone_matrix, DANGER_SCORE_MAX)
         w, h = scaled_xyxy[2] - scaled_xyxy[0], scaled_xyxy[3] - scaled_xyxy[1]
         if w == 0 or h == 0:

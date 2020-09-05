@@ -67,12 +67,12 @@ def print_danger_zone_matrix(r, c, danger_zone_matrix):
 
 def degrade_danger_zone_matrix(danger_zone_matrix, DANGER_DEGRADE_STRIDE):
     # DANGER_DEGRADE_STRIDE 만큼 빼지만, 위험계수가 음수라면 0으로 대체
-    for r, danger_zone_line in enumerate(danger_zone_matrix):
-        for c, d in enumerate(danger_zone_line):
-            # print(f"r, c, d = {r}, {c}, {d}")
-            danger_zone_line[c] = danger_zone_line[c] - DANGER_DEGRADE_STRIDE
-            if danger_zone_line[c] < 0:
-                danger_zone_line[c] = 0
+    danger_zone_matrix = danger_zone_matrix - DANGER_DEGRADE_STRIDE
+    for r in range(danger_zone_matrix.shape[0]):
+        for c in range(danger_zone_matrix.shape[1]):
+            if danger_zone_matrix[r][c] < 0:
+                danger_zone_matrix[r][c] = 0
+    # danger_zone_matrix[danger_zone_matrix < 0] = 0
     return danger_zone_matrix
 
 

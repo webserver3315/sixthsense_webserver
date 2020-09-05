@@ -3,6 +3,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
+from collections import deque
 import argparse
 from danger_zone import *
 from tracker import *
@@ -28,20 +29,20 @@ Output: 사진 내부에서 검출된 모든 Object 에 대한 정보 -> trackin
 def print_tracking_object_list_length(tracking_object_list):
     for b, tracking_object in enumerate(tracking_object_list):
         print(f"{b}th TOBJ's history length = {len(tracking_object)}")
+    print(f"\n")
 
 
-# def get_detected_image_from_photo(source, weights, tracking_object_list=[]):
+# tracking_object_list 은 list의 list였는데, deque의 리스트로 바꾼다!
+# danger_zone_matrix는 2차원배열에서 numpy 기반으로 바꾼다.
 def get_detected_image_from_photo(source, weights, tracking_object_list=[], danger_zone_matrix=[]):
     # ORIGINAL_R, ORIGINAL_C = 480, 640
     # DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C = 120, 160
-    print(f"get_detected_image_from_photo start!")
     original_img = imread(source)
     ORIGINAL_R, ORIGINAL_C = original_img.shape[0], original_img.shape[1]
     DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C = int(ORIGINAL_R / 4), int(ORIGINAL_C / 4)
-    print(f"ORIGINAL R, C and DZM R, C is {ORIGINAL_R} {ORIGINAL_C} {DANGER_ZONE_MATRIX_R} {DANGER_ZONE_MATRIX_C}")
+    # print(f"ORIGINAL R, C and DZM R, C is {ORIGINAL_R} {ORIGINAL_C} {DANGER_ZONE_MATRIX_R} {DANGER_ZONE_MATRIX_C}")
     TRACKING_OBJECT_MAX_SIZE = 10
     with torch.no_grad():
-        print("detect_photo function Start!")
         # out, source, weights, view_img, save_txt, imgsz = \
         # opt.output, opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size
 
@@ -60,7 +61,7 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
         model = attempt_load(weights, map_location=device)  # load FP32 model
         imgsz = check_img_size(imgsz, s=model.stride.max())  # check img_size
 
-        print(f"imgsz is {imgsz}")
+        # print(f"imgsz is {imgsz}")
 
         if half:
             model.half()  # to FP16
@@ -136,7 +137,8 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
 
                     if not tracking_object_list:
                         for detected_ppc in detected_object_list:
-                            tracking_object_list.append([detected_ppc])
+                            tracking_object_list.append(deque([detected_ppc]))
+                            # print_tracking_object_list_length(tracking_object_list)
                     else:
                         iou_table = make_iou_table_from_TOL_and_DOL(tracking_object_list, detected_object_list)
                         iou_table = make_iou_table_to_iou_pair_table(iou_table)
@@ -146,12 +148,13 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
                         for o, detected_ppc in enumerate(detected_object_list):
                             next_append = hist[o][1]
                             if next_append == -1:
-                                new_append.append([detected_ppc])
+                                new_append.append(deque([detected_ppc]))
                             else:
-                                if len(tracking_object_list[
-                                           next_append]) >= TRACKING_OBJECT_MAX_SIZE:  # 트래킹 객체의 큐사이즈가 5 초과라면 하나 버리기
+                                # print(f"tracking_object_list[{next_append}] = {len(tracking_object_list[next_append])}")
+                                if len(tracking_object_list[next_append]) >= TRACKING_OBJECT_MAX_SIZE:
                                     tracking_object_list[next_append].pop()
-                                tracking_object_list[next_append].insert(0, detected_ppc)  # 시간복잡 O(n) 이니 차후수정
+                                # print_tracking_object_list_length(f"{o}th for : {tracking_object_list}")
+                                tracking_object_list[next_append].appendleft(detected_ppc)  # 시간복잡 O(n) 이니 차후수정
                         for b, tracking_object in reversed(list(enumerate(tracking_object_list))):
                             if not done[b]:
                                 print(f"{b}th tracking object's track has been ended")

@@ -29,11 +29,13 @@ def print_tracking_object_list(tracking_object_list):
 #     tracking_object_list = get_detected_image_from_photo(source=source, weights='yolov5s.pt', tracking_object_list=tracking_object_list,
 #                                                                                danger_zone_matrix=danger_zone_matrix)
 
+t0 = time.time()
+
 tracking_object_list = []
 # danger_zone_matrix = [[0 for c in range(160)] for r in range(120)]
 danger_zone_matrix = None
 f = []
-mypath = '/data/swmrepo/sunshine-2/yolov5/inference/images/Capture'
+mypath = '/data/swmrepo/sunshine-2/yolov5/inference/images/Accident_04_Capture'
 for (dirpath, dirnames, filenames) in walk(mypath):
     f.extend(filenames)
     break
@@ -48,8 +50,13 @@ for b, source in enumerate(f):
     tracking_object_list = get_detected_image_from_photo(source=source, weights='yolov5s.pt',
                                                          tracking_object_list=tracking_object_list,
                                                          danger_zone_matrix=danger_zone_matrix)
-    print(f"\n\n\n*********{b:03d}th img**********")
+    # print(f"tracking_object_list's type = {type(tracking_object_list)}")
+    # print(f"tracking_object's type = {type(tracking_object_list[0])}")
+    # print(f"\n\n\n*********{b:03d}th img**********")
     # print_tracking_object_list(tracking_object_list)
+
+print('Really Finally, Done. (%.3fs)' % (time.time() - t0))
+
 
 #
 # tracking_object_list = []

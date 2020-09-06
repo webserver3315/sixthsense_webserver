@@ -5,7 +5,8 @@ sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 from collections import deque
 import argparse
-from danger_zone import *
+# from danger_zone import *
+from danger_zone_original import *
 from tracker import *
 from makeioutable import *
 from xyxypc2ppc import *
@@ -163,12 +164,14 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
                             tracking_object_list.append(new_tracking_object)
 
                     # danger_list 표 구하기 및  갱신
+                    tt0 = time.time()
                     tracking_object_list_danger_list, danger_zone_matrix = is_tracking_object_list_dangerous(ORIGINAL_R,
                                                                                                              ORIGINAL_C,
                                                                                                              DANGER_ZONE_MATRIX_R,
                                                                                                              DANGER_ZONE_MATRIX_C,
                                                                                                              tracking_object_list,
                                                                                                              danger_zone_matrix)
+                    print('is_tracking_object_list_dangerous: (%.3fs)' % (time.time() - tt0))
                     # BBOX 두르기 및 라벨 달기 및 꼬리선 달기
                     for b, tracking_object in enumerate(tracking_object_list):
                         xyxy = polygon_to_xyxy(tracking_object[0][0])
@@ -191,8 +194,10 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
                         draw_box_from_tracking_object(tracking_object, im0, label=label, color=colors,
                                                       line_thickness=3)
                     # Danger_zone 현황을 위험구역 색칠로써 가시화. 위험스택 쌓일수록 하얗게 변함.
+                    tt0 = time.time()
                     im0 = visualize_danger_zone_matrix(im0, ORIGINAL_R, ORIGINAL_C, DANGER_ZONE_MATRIX_R,
                                                        DANGER_ZONE_MATRIX_C, danger_zone_matrix)
+                    print('visualize_danger_zone_matrix: (%.3fs)' % (time.time() - tt0))
 
                 # 저장하는 부분. 크게 신경쓸 것 없음.
                 if save_img:

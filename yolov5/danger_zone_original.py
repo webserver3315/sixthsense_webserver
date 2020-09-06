@@ -23,7 +23,9 @@ def scale_xyxy_from_left_to_right(R, C, r, c, xyxy):  # C = 가로픽셀수, R =
 def initialize_danger_zone_matrix(original_img):
     ORIGINAL_R, ORIGINAL_C = int(original_img.shape[0]), int(original_img.shape[1])
     DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C = int(ORIGINAL_R / 4), int(ORIGINAL_C / 4)
+    t0 = time.time()
     danger_zone_matrix = [[0 for c in range(DANGER_ZONE_MATRIX_C)] for r in range(DANGER_ZONE_MATRIX_R)]
+    print('initialize_danger_zone_matrix: (%.3fs)' % (time.time() - t0))
     return danger_zone_matrix
 
 
@@ -65,12 +67,14 @@ def print_danger_zone_matrix(r, c, danger_zone_matrix):
 
 
 def degrade_danger_zone_matrix(DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C, danger_zone_matrix, DANGER_DEGRADE_STRIDE):
+    t0 = time.time()
     for r, danger_zone_line in enumerate(danger_zone_matrix):
         for c, d in enumerate(danger_zone_line):
             # print(f"r, c, d = {r}, {c}, {d}")
             danger_zone_line[c] = danger_zone_line[c] - DANGER_DEGRADE_STRIDE
             if danger_zone_line[c] < 0:
                 danger_zone_line[c] = 0
+    print('degrade_danger_zone_matrix: (%.3fs)' % (time.time() - t0))
     return danger_zone_matrix
 
 
@@ -79,6 +83,7 @@ def degrade_danger_zone_matrix(DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C, dange
 # 3. DZM 은 r(세로)*c(가로) 의 2차원 int 행렬이다. r, c에 일단 기본값으로 360, 640 권장
 def is_tracking_object_list_dangerous(ORIGINAL_R, ORIGINAL_C, DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C,
                                       tracking_object_list, danger_zone_matrix):
+    t0 = time.time()
     DANGER_UPDATE_STRIDE = 3000  # 훑고지나갈때마다 상승하는 위험도
     DANGER_THRESHOLD = 500  # 위험역치
     DANGER_SCORE_MAX = 5000  # 최대 저장할 수 있는 위험점수
@@ -114,5 +119,5 @@ def is_tracking_object_list_dangerous(ORIGINAL_R, ORIGINAL_C, DANGER_ZONE_MATRIX
             tracking_object_list_danger_list.append(int(average_danger_score))
         else:
             tracking_object_list_danger_list.append(0)
-
+    print('is_tracking_object_list_dangerous: (%.3fs)' % (time.time() - t0))
     return tracking_object_list_danger_list, danger_zone_matrix

@@ -40,6 +40,7 @@ def automatic_visualize_danger_zone_matrix(original_img, danger_zone_matrix):
 def visualize_danger_zone_matrix(img, ORIGINAL_R, ORIGINAL_C, DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C,
                                  danger_zone_matrix):
     # default = 720 1280 180 320
+    '''
     for rr in range(DANGER_ZONE_MATRIX_R):
         for cc in range(DANGER_ZONE_MATRIX_C):
             if danger_zone_matrix[rr][cc] == 0:
@@ -50,14 +51,15 @@ def visualize_danger_zone_matrix(img, ORIGINAL_R, ORIGINAL_C, DANGER_ZONE_MATRIX
             # print(f"original_xyxy is {original_xyxy}")
 
             # First we crop the sub-rect from the image _ https://stackoverflow.com/questions/56472024/how-to-change-the-opacity-of-boxes-cv2-rectangle
-            x, y, w, h = original_xyxy[0], original_xyxy[1], original_xyxy[2] - original_xyxy[0], original_xyxy[3] - \
-                         original_xyxy[1]
+            x, y = original_xyxy[0], original_xyxy[1],
+            w, h = original_xyxy[2] - original_xyxy[0], original_xyxy[3] - original_xyxy[1]
             alpha = danger_zone_matrix[rr][cc] * 0.0002
             sub_img = img[y:y + h, x:x + w]
             white_rect = np.ones(sub_img.shape, dtype=np.uint8) * 255
             res = cv2.addWeighted(sub_img, 1 - alpha * 0.35, white_rect, alpha * 0.35, 0)
             # Putting the image back to its position
             img[y:y + h, x:x + w] = res
+    '''
     return img
 
 

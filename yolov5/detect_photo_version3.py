@@ -33,9 +33,6 @@ def print_tracking_object_list_length(tracking_object_list):
     print(f"\n")
 
 def initial_setting():
-
-
-def get_image_return_detected_object_list(source, weights):
     original_img = imread(source)
     ORIGINAL_R, ORIGINAL_C = original_img.shape[0], original_img.shape[1]
     with torch.no_grad():
@@ -56,7 +53,6 @@ def get_image_return_detected_object_list(source, weights):
             modelc = torch_utils.load_classifier(name='resnet101', n=2)  # initialize
             modelc.load_state_dict(torch.load('weights/resnet101.pt', map_location=device)['model'])  # load weights
             modelc.to(device).eval()
-        vid_path, vid_writer = None, None
         save_img = True
         dataset = LoadImages(source, img_size=imgsz)
         names = model.module.names if hasattr(model, 'module') else model.names
@@ -66,53 +62,55 @@ def get_image_return_detected_object_list(source, weights):
         t0 = time.time()
         img = torch.zeros((1, 3, imgsz, imgsz), device=device)  # init img
         _ = model(img.half() if half else img) if device.type != 'cpu' else None  # run once
-        for path, img, im0s, vid_cap in dataset:
-            img = torch.from_numpy(img).to(device)
-            img = img.half() if half else img.float()  # uint8 to fp16/32
-            img /= 255.0  # 0 - 255 to 0.0 - 1.0
-            if img.ndimension() == 3:
-                img = img.unsqueeze(0)
 
-            # Inference
-            t1 = torch_utils.time_synchronized()
-            pred = model(img, augment=False)[0]
+def get_image_return_detected_object_list(source, weights):
+    for path, img, im0s, vid_cap in dataset:
+        img = torch.from_numpy(img).to(device)
+        img = img.half() if half else img.float()  # uint8 to fp16/32
+        img /= 255.0  # 0 - 255 to 0.0 - 1.0
+        if img.ndimension() == 3:
+            img = img.unsqueeze(0)
 
-            # Apply NMS
-            pred = non_max_suppression(pred, 0.4, 0.5, classes=None, agnostic=False)
-            t2 = torch_utils.time_synchronized()
+        # Inference
+        t1 = torch_utils.time_synchronized()
+        pred = model(img, augment=False)[0]
 
-            # Apply Classifier
-            if classify:
-                pred = apply_classifier(pred, modelc, img, im0s)
+        # Apply NMS
+        pred = non_max_suppression(pred, 0.4, 0.5, classes=None, agnostic=False)
+        t2 = torch_utils.time_synchronized()
 
-            # Process detections
-            for i, det in enumerate(pred):  # detections per image
-                p, s, im0 = path, '', im0s
+        # Apply Classifier
+        if classify:
+            pred = apply_classifier(pred, modelc, img, im0s)
 
-                save_path = str(Path(out) / Path(p).name)
-                txt_path = str(Path(out) / Path(p).stem) + ('_%g' % dataset.frame if dataset.mode == 'video' else '')
-                s += '%gx%g ' % img.shape[2:]  # print string
-                gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
+        # Process detections
+        for i, det in enumerate(pred):  # detections per image
+            p, s, im0 = path, '', im0s
 
-                if det is not None and len(det):
-                    # 이미지에 맞게 xyxy 좌표를 scaling 하는 듯.
-                    det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
-                    # print(f"det is {det}")
-                    for c in det[:, -1].unique():
-                        n = (det[:, -1] == c).sum()  # detections per class
-                        s += '%g %ss, ' % (n, names[int(c)])  # add to string
+            save_path = str(Path(out) / Path(p).name)
+            txt_path = str(Path(out) / Path(p).stem) + ('_%g' % dataset.frame if dataset.mode == 'video' else '')
+            s += '%gx%g ' % img.shape[2:]  # print string
+            gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
 
-                    # Write results
-                    detected_object_list = []
-                    for *xyxy, conf, cls in det:
-                        # cls 0: Person, 1: bicycle, 2: Car, 3: Motorcycle, 4: Airplane, 5: Bus, 6: Train, 7: Truck
-                        if int(cls) > 7:
-                            continue
-                        if cls > 2:  # 버스, 트럭 등은 전부 Car 로 통일
-                            cls = 2
-                        current_polygon = xyxy_to_polygon(xyxy)
-                        current_ppc = [current_polygon, float(conf), int(cls)]
-                        detected_object_list.append(current_ppc)
+            if det is not None and len(det):
+                # 이미지에 맞게 xyxy 좌표를 scaling 하는 듯.
+                det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
+                # print(f"det is {det}")
+                for c in det[:, -1].unique():
+                    n = (det[:, -1] == c).sum()  # detections per class
+                    s += '%g %ss, ' % (n, names[int(c)])  # add to string
+
+                # Write results
+                detected_object_list = []
+                for *xyxy, conf, cls in det:
+                    # cls 0: Person, 1: bicycle, 2: Car, 3: Motorcycle, 4: Airplane, 5: Bus, 6: Train, 7: Truck
+                    if int(cls) > 7:
+                        continue
+                    if cls > 2:  # 버스, 트럭 등은 전부 Car 로 통일
+                        cls = 2
+                    current_polygon = xyxy_to_polygon(xyxy)
+                    current_ppc = [current_polygon, float(conf), int(cls)]
+                    detected_object_list.append(current_ppc)
     return detected_object_list
 
 

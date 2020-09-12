@@ -21,9 +21,9 @@ def scale_xyxy_from_left_to_right(R, C, r, c, xyxy):  # C = 가로픽셀수, R =
 
 
 def initialize_danger_zone_matrix(original_img):
+    t0 = time.time()
     ORIGINAL_R, ORIGINAL_C = int(original_img.shape[0]), int(original_img.shape[1])
     DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C = int(ORIGINAL_R / 4), int(ORIGINAL_C / 4)
-    t0 = time.time()
     danger_zone_matrix = np.full((DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C), 0, dtype=int)
     print('initialize_danger_zone_matrix: (%.3fs)' % (time.time() - t0))
     return danger_zone_matrix

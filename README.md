@@ -13,7 +13,7 @@ This repository represents Sixthsense Project dealing with pedestrian protection
 - detect.py
 - app.py
 
-
+ 
 ## Requirements
 
 Python 3.8 or later with all [requirements.txt](https://github.com/ultralytics/yolov5/blob/master/requirements.txt) dependencies installed, including `torch>=1.6`. To install run:

@@ -12,7 +12,7 @@ This repository represents Sixthsense Project dealing with pedestrian protection
 - xyxypc2ppc.py
 - detect.py
 - app.py
-
+ 
  
 ## Requirements
 

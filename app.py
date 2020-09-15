@@ -2,11 +2,12 @@ from flask import Flask, flash, request, redirect, url_for, send_from_directory,
 from werkzeug.utils import secure_filename
 from device import Device
 from config import UPLOAD_FOLDER
+from accident_cal import accident_percentage
 import os
 import pickle
 import cv2
 
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 app = Flask(__name__)
 app.secret_key = 'sunshine!123'
@@ -63,8 +64,16 @@ def update_image(device_id):
             obj_list = device.new_frame(filepath, request.form['timestamp'])
         return pickle.dumps(obj_list)
 
+@app.route('/percentage/<device_id>', methods=['GET'])
+def percentage(device_id):
+    matrix = devices[device_id].accident_percentage_matrix
+    return max(max(x) for x in matrix if not 0)
+    
+
 @app.route('/framed/<device_id>', methods=['GET'])
 def framed(device_id):
+    if not devices[device_id].framed_images:
+        return 400
     retval, buffer = cv2.imencode('.png', devices[device_id].framed_images[-1])
     response = make_response(buffer.tobytes())
     response.headers['Content-Type'] = 'image/png'
@@ -76,7 +85,17 @@ def framed_idx(device_id):
 
 @app.route('/dashboard/<device_id>', methods=['GET'])
 def dashboard(device_id):
-    return render_template('dashboard.html', image_url='/framed/'+device_id)
+    device = devices[device_id]
+    
+    print(device.objects_list)
+    print(accident_percentage(device.objects_list))
+    ap = accident_percentage(device.objects_list)
+    max_per = [max(x) for x in ap if x]
+
+    max_per = max(max_per) if max_per else 0
+
+
+    return render_template('dashboard.html', image_url='/framed/'+device_id, size=max_per*400, danger_color=f"{int(min(255, 510*max_per)):02x}{int(min(255, 510-(510*max_per))):02x}00")
 
 @app.route('/uploads/<path:filename>')
 def serve_static(filename):

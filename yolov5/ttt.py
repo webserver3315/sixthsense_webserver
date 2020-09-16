@@ -1,6 +1,7 @@
 from os import walk
 import sys
-from detect_photo_version3 import *
+from detect_photo_module import *
+# from detect_photo_version3 import *
 # from detect_photo_version_certified import *
 from xyxypc2ppc import *
 
@@ -19,6 +20,8 @@ def print_tracking_object_list(tracking_object_list):
             else:
                 print(f"{p}Zen ppc of {b}th TO: {[middle_c, middle_r]}, {ppc[2]}")
 
+'''
+# Using detect_photo_modulizing.py
 
 t0 = time.time()
 tracking_object_list = []
@@ -48,6 +51,8 @@ for b, source in enumerate(f):
 print('Really Finally, Done. (%.3fs)' % (time.time() - t0))
 
 '''
+
+
 # Certified
 t0 = time.time()
 
@@ -75,4 +80,3 @@ for b, source in enumerate(f):
     # print_tracking_object_list(tracking_object_list)
 
 print('Really Finally, Done. (%.3fs)' % (time.time() - t0))
-'''

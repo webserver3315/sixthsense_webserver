@@ -75,6 +75,8 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
         save_img = True
         dataset = LoadImages(source, img_size=imgsz)
         # print(f"dataset is {dataset}")
+        names = model.module.names if hasattr(model, 'module') else model.names
+        colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(names))]
 
         # Run inference
         t0 = time.time()

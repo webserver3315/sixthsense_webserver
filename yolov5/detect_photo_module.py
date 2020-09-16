@@ -46,9 +46,6 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
     # print(f"ORIGINAL R, C and DZM R, C is {ORIGINAL_R} {ORIGINAL_C} {DANGER_ZONE_MATRIX_R} {DANGER_ZONE_MATRIX_C}")
     TRACKING_OBJECT_MAX_SIZE = 10
     with torch.no_grad():
-        # out, source, weights, view_img, save_txt, imgsz = \
-        # opt.output, opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size
-
         save_img = False
         out, weights, view_img, save_txt, imgsz = \
             'inference/output', weights, False, False, int(640)  # default: 640
@@ -63,9 +60,6 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
         # Load model
         model = attempt_load(weights, map_location=device)  # load FP32 model
         imgsz = check_img_size(imgsz, s=model.stride.max())  # check img_size
-
-        # print(f"imgsz is {imgsz}")
-
         if half:
             model.half()  # to FP16
 
@@ -82,10 +76,6 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
         dataset = LoadImages(source, img_size=imgsz)
         # print(f"dataset is {dataset}")
 
-        # Get names and colors
-        names = model.module.names if hasattr(model, 'module') else model.names
-        colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(names))]
-
         # Run inference
         t0 = time.time()
         img = torch.zeros((1, 3, imgsz, imgsz), device=device)  # init img
@@ -97,14 +87,11 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
             if img.ndimension() == 3:
                 img = img.unsqueeze(0)
 
-            # Inference
+            # Inference, Apply NMS
             t1 = torch_utils.time_synchronized()
             pred = model(img, augment=False)[0]
-
-            # Apply NMS
             pred = non_max_suppression(pred, 0.4, 0.5, classes=None, agnostic=False)
             t2 = torch_utils.time_synchronized()
-
             # Apply Classifier
             if classify:
                 pred = apply_classifier(pred, modelc, img, im0s)
@@ -112,7 +99,6 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
             # Process detections
             for i, det in enumerate(pred):  # detections per image
                 p, s, im0 = path, '', im0s
-
                 save_path = str(Path(out) / Path(p).name)
                 txt_path = str(Path(out) / Path(p).stem) + ('_%g' % dataset.frame if dataset.mode == 'video' else '')
                 s += '%gx%g ' % img.shape[2:]  # print string
@@ -138,25 +124,21 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
                         current_ppc = [current_polygon, float(conf), int(cls)]
                         detected_object_list.append(current_ppc)
 
-                    if not tracking_object_list:
+                    if not tracking_object_list: # 첫 이미지라면 전부 append
                         for detected_ppc in detected_object_list:
                             tracking_object_list.append(deque([detected_ppc]))
-                            # print_tracking_object_list_length(tracking_object_list)
                     else:
                         iou_table = make_iou_table_from_TOL_and_DOL(tracking_object_list, detected_object_list)
                         iou_table = make_iou_table_to_iou_pair_table(iou_table)
                         hist, done = solve(len(tracking_object_list), len(detected_object_list), iou_table)
-
                         new_append = []
                         for o, detected_ppc in enumerate(detected_object_list):
                             next_append = hist[o][1]
                             if next_append == -1:
                                 new_append.append(deque([detected_ppc]))
                             else:
-                                # print(f"tracking_object_list[{next_append}] = {len(tracking_object_list[next_append])}")
                                 if len(tracking_object_list[next_append]) >= TRACKING_OBJECT_MAX_SIZE:
                                     tracking_object_list[next_append].pop()
-                                # print_tracking_object_list_length(f"{o}th for : {tracking_object_list}")
                                 tracking_object_list[next_append].appendleft(detected_ppc)  # 시간복잡 O(n) 이니 차후수정
                         for b, tracking_object in reversed(list(enumerate(tracking_object_list))):
                             if not done[b]:
@@ -164,68 +146,9 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
                                 del tracking_object_list[b]
                         for new_tracking_object in new_append:
                             tracking_object_list.append(new_tracking_object)
-
-                    # danger_list 표 구하기 및  갱신
-                    tt0 = time.time()
-                    tracking_object_list_danger_list, danger_zone_matrix = is_tracking_object_list_dangerous(ORIGINAL_R,
-                                                                                                             ORIGINAL_C,
-                                                                                                             DANGER_ZONE_MATRIX_R,
-                                                                                                             DANGER_ZONE_MATRIX_C,
-                                                                                                             tracking_object_list,
-                                                                                                             danger_zone_matrix)
-                    print('is_tracking_object_list_dangerous: (%.3fs)' % (time.time() - tt0))
-                    # BBOX 두르기 및 라벨 달기 및 꼬리선 달기
-                    for b, tracking_object in enumerate(tracking_object_list):
-                        xyxy = polygon_to_xyxy(tracking_object[0][0])
-                        conf, cls = tracking_object[0][1], tracking_object[0][2]
-
-                        speed = get_speed(tracking_object)
-
-                        if tracking_object_list_danger_list[b] > 0:
-                            label = f"Danger: {names[int(cls)] + str(b)} {speed}km/h {int(tracking_object_list_danger_list[b] / 500)}%"
-                        else:
-                            label = f"{names[int(cls)] + str(b)} {speed}km/h"
-
-                        if tracking_object[0][2] != 0:  # 차량은 파랑. 참고로 BGR 순임
-                            colors = (255, 0, 0)
-                        elif tracking_object_list_danger_list[b] != 0:  # 위험한 사람은 빨강
-                            colors = (0, 0, 255)
-                        else:  # 일반인은 초록
-                            colors = (0, 255, 0)
-                        draw_lines_from_tracking_object(tracking_object, im0, color=colors, line_thickness=2)
-                        draw_box_from_tracking_object(tracking_object, im0, label=label, color=colors,
-                                                      line_thickness=3)
-                    # Danger_zone 현황을 위험구역 색칠로써 가시화. 위험스택 쌓일수록 하얗게 변함.
-                    tt0 = time.time()
-                    im0 = visualize_danger_zone_matrix(im0, ORIGINAL_R, ORIGINAL_C, DANGER_ZONE_MATRIX_R,
-                                                       DANGER_ZONE_MATRIX_C, danger_zone_matrix)
-                    print('visualize_danger_zone_matrix: (%.3fs)' % (time.time() - tt0))
-
-                # 저장하는 부분. 크게 신경쓸 것 없음.
-                if save_img:
-                    if dataset.mode == 'images':
-                        cv2.imwrite(save_path, im0)
-                    else:
-                        if vid_path != save_path:  # new video
-                            vid_path = save_path
-                            if isinstance(vid_writer, cv2.VideoWriter):
-                                vid_writer.release()  # release previous video writer
-
-                            fourcc = 'mp4v'  # output video codec
-                            fps = vid_cap.get(cv2.CAP_PROP_FPS)
-                            w = int(vid_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-                            h = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-                            vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*fourcc), fps, (w, h))
-                        vid_writer.write(im0)
-
             # Print time (inference + NMS)
-            print('%sDone. (%.3fs)' % (s, t2 - t1))
-
-        if save_txt or save_img:
-            print('Results saved to %s' % os.getcwd() + os.sep + out)
-            if platform == 'darwin' and not opt.update:  # MacOS
-                os.system('open ' + save_path)
-
-        print('Finally, Done. (%.3fs)' % (time.time() - t0))
+            print('%s Pure Yolo took: (%.3fs)' % (s, t2 - t1))
+        print('Finally, This Image Returned TObjL. (%.3fs)' % (time.time() - t0))
     # print_tracking_object_list_length(tracking_object_list)
     return tracking_object_list
+

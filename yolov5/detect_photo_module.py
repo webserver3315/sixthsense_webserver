@@ -14,7 +14,6 @@ from models.experimental import *
 from utils.datasets import *
 from utils.utils import *
 
-# Namespace(agnostic_nms=False, augment=False, classes=None, conf_thres=0.4, device='', img_size=640, iou_thres=0.5, output='inference/output', save_txt=False, source='./inference/images/zidane.jpg', update=False, view_img=False, weights=['yolov5s.pt'])
 
 '''
 이 코드는 opt-독립인 코드입니다.
@@ -35,9 +34,12 @@ def print_tracking_object_list_length(tracking_object_list):
 
 # tracking_object_list 은 list의 list였는데, deque의 리스트로 바꾼다!
 # danger_zone_matrix는 2차원배열에서 numpy 기반으로 바꾼다.
+
+def get_tracking_object_list_from_photo(source, weights, tracking_object_list=[], danger_zone_matrix=[]):
+    get_detected_image_from_photo(source, weights, tracking_object_list, danger_zone_matrix)
+    return tracking_object_list
+
 def get_detected_image_from_photo(source, weights, tracking_object_list=[], danger_zone_matrix=[]):
-    # ORIGINAL_R, ORIGINAL_C = 480, 640
-    # DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C = 120, 160
     original_img = imread(source)
     ORIGINAL_R, ORIGINAL_C = original_img.shape[0], original_img.shape[1]
     DANGER_ZONE_MATRIX_R, DANGER_ZONE_MATRIX_C = int(ORIGINAL_R / 4), int(ORIGINAL_C / 4)
@@ -227,44 +229,3 @@ def get_detected_image_from_photo(source, weights, tracking_object_list=[], dang
         print('Finally, Done. (%.3fs)' % (time.time() - t0))
     # print_tracking_object_list_length(tracking_object_list)
     return tracking_object_list
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', nargs='+', type=str, default='yolov5s.pt', help='model.pt path(s)')
-    parser.add_argument('--source', type=str, default='inference/images', help='source')  # file/folder, 0 for webcam
-    parser.add_argument('--output', type=str, default='inference/output', help='output folder')  # output folder
-    parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
-    parser.add_argument('--conf-thres', type=float, default=0.4, help='object confidence threshold')
-    parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
-    parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
-    parser.add_argument('--view-img', action='store_true', help='display results')
-    parser.add_argument('--save-txt', action='store_true', help='save results to *.txt')
-    parser.add_argument('--classes', nargs='+', type=int, help='filter by class: --class 0, or --class 0 2 3')
-    parser.add_argument('--agnostic-nms', action='store_true', help='class-agnostic NMS')
-    parser.add_argument('--augment', action='store_true', help='augmented inference')
-    parser.add_argument('--update', action='store_true', help='update all models')
-    opt = parser.parse_args()
-    print(opt)
-
-    danger_zone_matrix = [[0 for c in range(320)] for r in range(180)]
-    with torch.no_grad():
-        if opt.update:  # update all models (to fix SourceChangeWarning)
-            print("if opt.update")
-            for opt.weights in ['yolov5s.pt', 'yolov5m.pt', 'yolov5l.pt', 'yolov5x.pt']:
-                get_detected_image_from_photo()
-                strip_optimizer(opt.weights)
-        else:
-            source, weights = opt.source, opt.weights
-            tracking_object_list = []
-            tracking_object_list = get_detected_image_from_photo(source, weights, tracking_object_list,
-                                                                 danger_zone_matrix)
-            print(f"length of tracking_object_list is {len(tracking_object_list)}")
-            print(tracking_object_list)
-            for b, tracking_object in enumerate(tracking_object_list):
-                # print(tracking_object)
-                tracking_ppc = tracking_object[0]
-                tracking_polygon = tracking_ppc[0]
-                tracking_polygon
-                print(tracking_polygon)
-    # print(f"final tracking_object_list is {tracking_object_list}")
